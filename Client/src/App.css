@@ -5,6 +5,23 @@
   text-align: center;
 }
 
+/* src/App.css */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f9f9f9;
+  color: #333;
+}
+
+h1 {
+  color: #4a2c74;
+}
+
+p {
+  color: #444;
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;

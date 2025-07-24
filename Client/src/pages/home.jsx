@@ -1,16 +1,13 @@
-import { useState } from 'react' // hooks 
+import './HomePage.css';
 
 function HomePage() {
-
   return (
-    <>
-      <div>
-        <h1> welcome to campus kala </h1>
-        <p>buy your products from your friends </p>
-      </div>
-    </>
-  )
-
+    <div className="home-container">
+      <h1>Welcome to Campus Kala 🎨</h1>
+      <p>Buy and sell unique student-made products within your campus!</p>
+      <p>LETS BUILD OUR PROJECT CAMPUS KALA</p>
+    </div>
+  );
 }
 
-export default HomePage
+export default HomePage;

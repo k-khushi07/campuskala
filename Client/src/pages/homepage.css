@@ -1,0 +1,22 @@
+.home-container {
+  min-height: 100vh;
+  padding-top: 100px; /* Space for navbar */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.home-container h1 {
+  font-size: 3rem;
+  color: #4b278e;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.home-container p {
+  font-size: 1.2rem;
+  color: #444;
+  max-width: 600px;
+}
