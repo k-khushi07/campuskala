@@ -1,16 +1,28 @@
-import { NavLink } from 'react-router-dom';
-import './Navbar.css';
+import { NavLink } from "react-router-dom";
+import "./Navbar.css";
 
 function Navbar() {
   return (
     <nav className="navbar">
-      <div className="navbar-logo">Campus Kala</div>
+      {/* Logo */}
+      <div className="navbar-logo">
+        <img src="/logo.png" alt="Campus Kala Logo" className="logo-img" />
+        <span>Campus Kala</span>
+      </div>
+
+      {/* Search Bar */}
+      <div className="navbar-search">
+        <input type="text" placeholder="Search..." />
+        <button>🔍</button>
+      </div>
+
+      {/* Nav Links */}
       <ul className="navbar-links">
-        <li><NavLink to="/" end>Home</NavLink></li>
+        <li><NavLink to="/signup">Sign Up</NavLink></li>
+        <li><NavLink to="/services">Services</NavLink></li>
         <li><NavLink to="/products">Products</NavLink></li>
-        <li><NavLink to="/about">About</NavLink></li>
-        <li><NavLink to="/contact">Contact</NavLink></li>
-        <li><NavLink to="/login">Login</NavLink></li>
+        <li><NavLink to="/business">Business</NavLink></li>
+        <li><NavLink to="/queries">Queries</NavLink></li>
       </ul>
     </nav>
   );
