@@ -1,31 +1,79 @@
-import { NavLink } from "react-router-dom";
-import "./Navbar.css";
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { ShoppingCart, User, Menu } from 'lucide-react'
 
-function Navbar() {
+const Navbar = () => {
   return (
-    <nav className="navbar">
-      {/* Logo */}
-      <div className="navbar-logo">
-        <img src="/logo.png" alt="Campus Kala Logo" className="logo-img" />
-        <span>Campus Kala</span>
-      </div>
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0">
+            <h1 className="text-2xl font-bold text-blue-600">CampusKala</h1>
+          </Link>
 
-      {/* Search Bar */}
-      <div className="navbar-search">
-        <input type="text" placeholder="Search..." />
-        <button>🔍</button>
-      </div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:block">
+            <div className="ml-10 flex items-baseline space-x-4">
+              <Link
+                to="/"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                to="/products"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Products
+              </Link>
+              <Link
+                to="/services"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Services
+              </Link>
+              <Link
+                to="/custom-order"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Custom Orders
+              </Link>
+            </div>
+          </div>
 
-      {/* Nav Links */}
-      <ul className="navbar-links">
-        <li><NavLink to="/signup">Sign Up</NavLink></li>
-        <li><NavLink to="/services">Services</NavLink></li>
-        <li><NavLink to="/products">Products</NavLink></li>
-        <li><NavLink to="/business">Business</NavLink></li>
-        <li><NavLink to="/queries">Queries</NavLink></li>
-      </ul>
+          {/* Right side buttons */}
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/cart"
+              className="text-gray-700 hover:text-blue-600 p-2 rounded-full transition-colors"
+            >
+              <ShoppingCart size={20} />
+            </Link>
+            <Link
+              to="/profile"
+              className="text-gray-700 hover:text-blue-600 p-2 rounded-full transition-colors"
+            >
+              <User size={20} />
+            </Link>
+            <Link
+              to="/login"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Login
+            </Link>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="text-gray-700 hover:text-blue-600 p-2">
+                <Menu size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </nav>
-  );
+  )
 }
 
-export default Navbar;
+export default Navbar
