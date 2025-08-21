@@ -1,4 +1,3 @@
-/ src/pages/CustomOrder.jsx
 import React from 'react'
 
 const CustomOrder = () => {
