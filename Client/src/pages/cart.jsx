@@ -14,7 +14,7 @@ const Cart = () => {
           </p>
           <div className="bg-white p-8 rounded-lg shadow-md">
             <p className="text-gray-500">
-              Coming soon - Shopping cart with item management and checkout.
+              Coming soon - Shopping cart with item management and checkout yayyyy.
             </p>
           </div>
         </div>
