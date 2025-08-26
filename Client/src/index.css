@@ -1,6 +1,4 @@
 @import "tailwindcss";
-
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
@@ -14,12 +12,16 @@
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;           /* Standard property */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  
+
   .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
+    line-clamp: 3;           /* Standard property */
+    -webkit-line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
   }
