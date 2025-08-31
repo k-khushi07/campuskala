@@ -1,418 +1,435 @@
-import React, { useState } from 'react';
-import './services.css';
+import React, { useState } from 'react'
+import { Search, Filter, MapPin, Clock, Star, Calendar, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import ServiceCard from '../components/ServiceCard'
 
 const Services = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 5000]);
-  const [sortBy, setSortBy] = useState('recommended');
-  const [serviceType, setServiceType] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [priceRange, setPriceRange] = useState([0, 3000])
+  const [location, setLocation] = useState('all')
+  const [duration, setDuration] = useState('all')
+  const [sortBy, setSortBy] = useState('popular')
+  const [showFilters, setShowFilters] = useState(false)
 
-  // Sample services data
+  const categories = [
+    { id: 'all', name: 'All Services' },
+    { id: 'tutoring', name: 'Tutoring & Education' },
+    { id: 'photography', name: 'Photography' },
+    { id: 'music', name: 'Music Lessons' },
+    { id: 'tech', name: 'Tech Support' },
+    { id: 'design', name: 'Design & Creative' },
+    { id: 'fitness', name: 'Fitness & Wellness' },
+    { id: 'language', name: 'Language Learning' },
+  ]
+
+  const locations = [
+    { id: 'all', name: 'All Locations' },
+    { id: 'campus', name: 'On Campus' },
+    { id: 'online', name: 'Online' },
+    { id: 'hybrid', name: 'Hybrid' },
+    { id: 'nearby', name: 'Near Campus' },
+  ]
+
+  const durations = [
+    { id: 'all', name: 'Any Duration' },
+    { id: 'short', name: '< 1 hour' },
+    { id: 'medium', name: '1-2 hours' },
+    { id: 'long', name: '2+ hours' },
+    { id: 'ongoing', name: 'Ongoing' },
+  ]
+
+  const sortOptions = [
+    { value: 'popular', label: 'Most Popular' },
+    { value: 'newest', label: 'Newest First' },
+    { value: 'price-low', label: 'Price: Low to High' },
+    { value: 'price-high', label: 'Price: High to Low' },
+    { value: 'rating', label: 'Highest Rated' },
+  ]
+
   const services = [
     {
       id: 1,
-      title: "I will create a professional website design",
-      price: 1500,
-      deliveryTime: "3 days",
-      image: "/api/placeholder/300/200",
-      rating: 4.9,
-      reviews: 156,
-      seller: {
-        name: "RahulDesigns",
-        level: "Level 2 Seller",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Portrait Photography Session',
+      priceRange: '₹1500-3000',
+      minPrice: 1500,
+      maxPrice: 3000,
+      image: 'https://images.unsplash.com/photo-1554048612-b6ebae896fb5?w=400',
+      creator: { 
+        id: 1, 
+        name: 'Aditi Mehta', 
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
+        verified: true 
       },
-      category: "design",
-      serviceType: "fixed",
-      tags: ["web design", "ui/ux", "responsive"],
-      featured: true,
-      orders: 234
+      rating: 4.9,
+      reviewCount: 28,
+      category: 'photography',
+      duration: '2-3 hours',
+      location: 'Campus & Nearby',
+      locationType: 'hybrid',
+      tags: ['portrait', 'graduation', 'professional'],
+      description: 'Professional portrait photography for graduation, LinkedIn, or personal use.',
+      availability: 'Available this week',
+      responseTime: '< 2 hours',
+      completedOrders: 45,
+      isTopRated: true
     },
     {
       id: 2,
-      title: "I will write SEO optimized blog articles",
-      price: 500,
-      deliveryTime: "2 days",
-      image: "/api/placeholder/300/200",
-      rating: 4.8,
-      reviews: 89,
-      seller: {
-        name: "ContentByPriya",
-        level: "Level 1 Seller",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Guitar Lessons (Beginner to Intermediate)',
+      priceRange: '₹500-800/hr',
+      minPrice: 500,
+      maxPrice: 800,
+      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400',
+      creator: { 
+        id: 2, 
+        name: 'Arjun Reddy', 
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+        verified: true 
       },
-      category: "writing",
-      serviceType: "fixed",
-      tags: ["content writing", "seo", "blog"],
-      featured: false,
-      orders: 145
+      rating: 4.8,
+      reviewCount: 22,
+      category: 'music',
+      duration: '1 hour',
+      location: 'Music Room',
+      locationType: 'campus',
+      tags: ['guitar', 'acoustic', 'beginner'],
+      description: 'Learn guitar from basics to intermediate level. Acoustic and electric guitar lessons available.',
+      availability: 'Available daily',
+      responseTime: '< 1 hour',
+      completedOrders: 67,
+      isTopRated: true
     },
     {
       id: 3,
-      title: "I will provide math tutoring sessions",
-      price: 800,
-      priceType: "per hour",
-      deliveryTime: "Same day",
-      image: "/api/placeholder/300/200",
-      rating: 4.9,
-      reviews: 67,
-      seller: {
-        name: "MathGuru2024",
-        level: "Top Rated",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Web Development Tutoring',
+      priceRange: '₹800-1200/hr',
+      minPrice: 800,
+      maxPrice: 1200,
+      image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
+      creator: { 
+        id: 3, 
+        name: 'Sneha Gupta', 
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100',
+        verified: true 
       },
-      category: "tutoring",
-      serviceType: "hourly",
-      tags: ["mathematics", "tutoring", "calculus"],
-      featured: true,
-      orders: 89
+      rating: 4.7,
+      reviewCount: 19,
+      category: 'tech',
+      duration: '1-2 hours',
+      location: 'Online/Campus',
+      locationType: 'hybrid',
+      tags: ['react', 'javascript', 'web development'],
+      description: 'Personalized web development tutoring covering HTML, CSS, JavaScript, React and more.',
+      availability: 'Available weekends',
+      responseTime: '< 4 hours',
+      completedOrders: 34,
+      isTopRated: false
     },
     {
       id: 4,
-      title: "I will develop a mobile app prototype",
-      price: 3500,
-      deliveryTime: "7 days",
-      image: "/api/placeholder/300/200",
-      rating: 4.7,
-      reviews: 34,
-      seller: {
-        name: "AppDev_Student",
-        level: "Level 2 Seller",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Math & Physics Tutoring',
+      priceRange: '₹400-600/hr',
+      minPrice: 400,
+      maxPrice: 600,
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400',
+      creator: { 
+        id: 4, 
+        name: 'Rohit Sharma', 
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+        verified: true 
       },
-      category: "programming",
-      serviceType: "fixed",
-      tags: ["app development", "prototype", "flutter"],
-      featured: false,
-      orders: 78
+      rating: 4.6,
+      reviewCount: 16,
+      category: 'tutoring',
+      duration: '1 hour',
+      location: 'Library/Online',
+      locationType: 'hybrid',
+      tags: ['mathematics', 'physics', 'exam prep'],
+      description: 'Expert tutoring in mathematics and physics for all levels. Exam preparation available.',
+      availability: 'Available evenings',
+      responseTime: '< 3 hours',
+      completedOrders: 28,
+      isTopRated: false
     },
     {
       id: 5,
-      title: "I will create custom illustrations",
-      price: 1200,
-      deliveryTime: "4 days",
-      image: "/api/placeholder/300/200",
-      rating: 4.8,
-      reviews: 156,
-      seller: {
-        name: "ArtByAisha",
-        level: "Level 3 Seller",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Graphic Design Services',
+      priceRange: '₹1000-2500',
+      minPrice: 1000,
+      maxPrice: 2500,
+      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400',
+      creator: { 
+        id: 5, 
+        name: 'Kavya Patel', 
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100',
+        verified: false 
       },
-      category: "design",
-      serviceType: "fixed",
-      tags: ["illustration", "digital art", "custom"],
-      featured: true,
-      orders: 267
+      rating: 4.5,
+      reviewCount: 12,
+      category: 'design',
+      duration: '2-5 days',
+      location: 'Online',
+      locationType: 'online',
+      tags: ['logo design', 'posters', 'branding'],
+      description: 'Professional graphic design for logos, posters, social media content, and branding materials.',
+      availability: 'Available this month',
+      responseTime: '< 6 hours',
+      completedOrders: 15,
+      isTopRated: false
     },
     {
       id: 6,
-      title: "I will help with data analysis projects",
-      price: 2000,
-      deliveryTime: "5 days",
-      image: "/api/placeholder/300/200",
-      rating: 4.9,
-      reviews: 43,
-      seller: {
-        name: "DataScience_Pro",
-        level: "Top Rated",
-        avatar: "/api/placeholder/40/40",
-        verified: true
+      title: 'Spanish Language Lessons',
+      priceRange: '₹600-900/hr',
+      minPrice: 600,
+      maxPrice: 900,
+      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400',
+      creator: { 
+        id: 6, 
+        name: 'Maria Rodriguez', 
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
+        verified: true 
       },
-      category: "data",
-      serviceType: "fixed",
-      tags: ["data analysis", "python", "visualization"],
-      featured: true,
-      orders: 123
+      rating: 4.8,
+      reviewCount: 25,
+      category: 'language',
+      duration: '1 hour',
+      location: 'Language Lab/Online',
+      locationType: 'hybrid',
+      tags: ['spanish', 'conversation', 'beginner'],
+      description: 'Learn Spanish from a native speaker. Conversational Spanish and grammar lessons available.',
+      availability: 'Available Mon-Fri',
+      responseTime: '< 2 hours',
+      completedOrders: 41,
+      isTopRated: true
     }
-  ];
-
-  const categories = [
-    { id: 'all', name: 'All Services', icon: '🎯', count: services.length },
-    { id: 'design', name: 'Design & Creative', icon: '🎨', count: services.filter(s => s.category === 'design').length },
-    { id: 'writing', name: 'Writing & Content', icon: '✍️', count: services.filter(s => s.category === 'writing').length },
-    { id: 'programming', name: 'Programming & Tech', icon: '💻', count: services.filter(s => s.category === 'programming').length },
-    { id: 'tutoring', name: 'Tutoring & Education', icon: '📚', count: services.filter(s => s.category === 'tutoring').length },
-    { id: 'data', name: 'Data & Analytics', icon: '📊', count: services.filter(s => s.category === 'data').length }
-  ];
+  ]
 
   const filteredServices = services.filter(service => {
-    if (selectedCategory !== 'all' && service.category !== selectedCategory) return false;
-    if (service.price < priceRange[0] || service.price > priceRange[1]) return false;
-    if (serviceType !== 'all' && service.serviceType !== serviceType) return false;
-    return true;
-  });
+    const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         service.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         service.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory
+    const matchesLocation = location === 'all' || service.locationType === location
+    const matchesPrice = service.maxPrice >= priceRange[0] && service.minPrice <= priceRange[1]
+    return matchesSearch && matchesCategory && matchesLocation && matchesPrice
+  })
 
   const sortedServices = [...filteredServices].sort((a, b) => {
     switch (sortBy) {
-      case 'price-low': return a.price - b.price;
-      case 'price-high': return b.price - a.price;
-      case 'rating': return b.rating - a.rating;
-      case 'reviews': return b.reviews - a.reviews;
-      case 'orders': return b.orders - a.orders;
-      default: return b.featured - a.featured;
+      case 'newest':
+        return b.id - a.id
+      case 'price-low':
+        return a.minPrice - b.minPrice
+      case 'price-high':
+        return b.maxPrice - a.maxPrice
+      case 'rating':
+        return b.rating - a.rating
+      default:
+        return b.completedOrders - a.completedOrders
     }
-  });
+  })
+
+  const handleCreatorClick = (creator) => {
+    console.log('Navigate to creator:', creator.id)
+  }
+
+  const handleBookService = (service) => {
+    console.log('Book service:', service.id)
+  }
 
   return (
-    <div className="services-container">
-      {/* Hero Section */}
-      <div className="services-hero">
-        <div className="hero-content">
-          <h1>Find Student Services</h1>
-          <p>Connect with talented student freelancers for your next project</p>
-          <div className="hero-search">
-            <input 
-              type="text" 
-              placeholder="Search for any service..." 
-              className="search-input"
-            />
-            <button className="search-btn">Search</button>
-          </div>
-        </div>
-        <div className="hero-stats">
-          <div className="stat-item">
-            <span className="stat-number">1000+</span>
-            <span className="stat-label">Active Services</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number">500+</span>
-            <span className="stat-label">Student Freelancers</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number">95%</span>
-            <span className="stat-label">Client Satisfaction</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="categories-section">
-        <h2>Browse by Category</h2>
-        <div className="categories-grid">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              className={`category-card ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              <span className="category-icon">{category.icon}</span>
-              <div className="category-info">
-                <h3>{category.name}</h3>
-                <span className="service-count">{category.count} services</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="services-layout">
-        {/* Filters Sidebar */}
-        <div className="filters-sidebar">
-          <div className="filter-section">
-            <h3>Service Type</h3>
-            <div className="service-type-filters">
-              <label className="radio-label">
-                <input 
-                  type="radio" 
-                  name="serviceType" 
-                  value="all" 
-                  checked={serviceType === 'all'}
-                  onChange={(e) => setServiceType(e.target.value)}
-                />
-                All Types
-              </label>
-              <label className="radio-label">
-                <input 
-                  type="radio" 
-                  name="serviceType" 
-                  value="fixed" 
-                  checked={serviceType === 'fixed'}
-                  onChange={(e) => setServiceType(e.target.value)}
-                />
-                Fixed Price
-              </label>
-              <label className="radio-label">
-                <input 
-                  type="radio" 
-                  name="serviceType" 
-                  value="hourly" 
-                  checked={serviceType === 'hourly'}
-                  onChange={(e) => setServiceType(e.target.value)}
-                />
-                Hourly Rate
-              </label>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Browse Services</h1>
+              <p className="text-gray-600 mt-1">Find expert help from talented students</p>
             </div>
-          </div>
 
-          <div className="filter-section">
-            <h3>Budget Range</h3>
-            <div className="price-filter">
+            {/* Search Bar */}
+            <div className="relative max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
-                type="range"
-                min="0"
-                max="5000"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="price-slider"
+                type="text"
+                placeholder="Search services..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <div className="price-display">
-                ₹{priceRange[0]} - ₹{priceRange[1]}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Filters */}
+          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
+
+              {/* Category Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Location Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {locations.map(loc => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Range */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price Range: ₹{priceRange[0]} - ₹{priceRange[1]}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="3000"
+                  step="100"
+                  value={priceRange[1]}
+                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Quick Filters */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Quick Filters</h4>
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded text-blue-600" />
+                  <span className="ml-2 text-sm text-gray-600">Top Rated</span>
+                </label>
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded text-blue-600" />
+                  <span className="ml-2 text-sm text-gray-600">Available Today</span>
+                </label>
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded text-blue-600" />
+                  <span className="ml-2 text-sm text-gray-600">Verified Creators</span>
+                </label>
               </div>
             </div>
           </div>
 
-          <div className="filter-section">
-            <h3>Seller Level</h3>
-            <div className="checkbox-filters">
-              <label><input type="checkbox" /> Top Rated Seller</label>
-              <label><input type="checkbox" /> Level 2+ Seller</label>
-              <label><input type="checkbox" /> New Seller</label>
-            </div>
-          </div>
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="lg:hidden flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  <SlidersHorizontal size={16} className="mr-2" />
+                  Filters
+                </button>
+                <span className="text-sm text-gray-600">
+                  {sortedServices.length} services found
+                </span>
+              </div>
 
-          <div className="filter-section">
-            <h3>Delivery Time</h3>
-            <div className="checkbox-filters">
-              <label><input type="checkbox" /> Express (24hrs)</label>
-              <label><input type="checkbox" /> Up to 3 days</label>
-              <label><input type="checkbox" /> Up to 7 days</label>
-            </div>
-          </div>
-        </div>
-
-        {/* Services Main Content */}
-        <div className="services-main">
-          {/* Sort Bar */}
-          <div className="sort-bar">
-            <div className="results-info">
-              <span className="results-count">{sortedServices.length} services available</span>
-              {selectedCategory !== 'all' && (
-                <span className="active-filter">in {categories.find(c => c.id === selectedCategory)?.name}</span>
-              )}
-            </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="sort-select"
-            >
-              <option value="recommended">Recommended</option>
-              <option value="rating">Best Rating</option>
-              <option value="orders">Best Selling</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
-          </div>
-
-          {/* Services Grid */}
-          <div className="services-grid">
-            {sortedServices.map(service => (
-              <div key={service.id} className="service-card">
-                <div className="service-image">
-                  <img src={service.image} alt={service.title} />
-                  {service.featured && <span className="featured-badge">Featured</span>}
-                  <div className="service-overlay">
-                    <button className="contact-btn">Contact Seller</button>
-                  </div>
-                </div>
-
-                <div className="service-content">
-                  <div className="seller-info">
-                    <img src={service.seller.avatar} alt={service.seller.name} className="seller-avatar" />
-                    <div className="seller-details">
-                      <span className="seller-name">{service.seller.name}</span>
-                      <span className="seller-level">{service.seller.level}</span>
-                    </div>
-                    {service.seller.verified && <div className="verified-badge">✓</div>}
-                  </div>
-
-                  <h3 className="service-title">{service.title}</h3>
-
-                  <div className="service-tags">
-                    {service.tags.slice(0, 3).map(tag => (
-                      <span key={tag} className="service-tag">{tag}</span>
+              <div className="flex items-center gap-4">
+                {/* Sort Dropdown */}
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {sortOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
                     ))}
-                  </div>
-
-                  <div className="service-stats">
-                    <div className="rating">
-                      <span className="stars">★</span>
-                      <span className="rating-number">{service.rating}</span>
-                      <span className="reviews-count">({service.reviews})</span>
-                    </div>
-                    <span className="orders-count">{service.orders} orders</span>
-                  </div>
-
-                  <div className="service-footer">
-                    <div className="delivery-info">
-                      <span className="delivery-icon">⚡</span>
-                      <span className="delivery-time">{service.deliveryTime}</span>
-                    </div>
-                    <div className="price-info">
-                      <span className="price-label">Starting at</span>
-                      <span className="price">₹{service.price}</span>
-                      {service.priceType && <span className="price-type">/{service.priceType}</span>}
-                    </div>
-                  </div>
-
-                  <button className="service-cta">View Details</button>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Load More */}
-          <div className="load-more-section">
-            <button className="load-more-btn">Show More Services</button>
-          </div>
-        </div>
-      </div>
+            {/* Services Grid */}
+            {sortedServices.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {sortedServices.map(service => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onCreatorClick={handleCreatorClick}
+                    onBookService={handleBookService}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+                  <Search className="text-gray-400" size={24} />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No services found</h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your search or filter criteria
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSelectedCategory('all')
+                    setLocation('all')
+                    setPriceRange([0, 3000])
+                  }}
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
 
-      {/* How It Works Section */}
-      <div className="how-it-works">
-        <h2>How CampusKala Works</h2>
-        <div className="steps-grid">
-          <div className="step-item">
-            <div className="step-number">1</div>
-            <h4>Browse Services</h4>
-            <p>Explore services from verified student freelancers across various categories</p>
-          </div>
-          <div className="step-item">
-            <div className="step-number">2</div>
-            <h4>Choose & Contact</h4>
-            <p>Select the perfect service and communicate directly with the seller</p>
-          </div>
-          <div className="step-item">
-            <div className="step-number">3</div>
-            <h4>Place Order</h4>
-            <p>Secure payment process with milestone-based payments for larger projects</p>
-          </div>
-          <div className="step-item">
-            <div className="step-number">4</div>
-            <h4>Get Results</h4>
-            <p>Receive high-quality work on time with revision options included</p>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="cta-section">
-        <div className="cta-content">
-          <h2>Ready to Start Your Project?</h2>
-          <p>Join thousands of satisfied clients who found the perfect freelancer</p>
-          <div className="cta-buttons">
-            <button className="btn-primary">Post a Project</button>
-            <button className="btn-secondary">Become a Seller</button>
+            {/* Featured Services Section */}
+            {sortedServices.length > 0 && (
+              <div className="mt-12 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Need Help Finding the Right Service?
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    Our team can help match you with the perfect service provider for your needs.
+                  </p>
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    Get Personalized Recommendations
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Services;
+export default Services
