@@ -1,36 +1,77 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { CartProvider } from './context/CartContext'
 import Navbar from './components/navbar'
 import Footer from './components/footer'
+import ProtectedRoute from './components/ProtectedRoute'
+
+// Pages
 import Home from './pages/home'
-import Login from './pages/login'
-import Register from './pages/register'
 import Products from './pages/products'
-import Services from './pages/sevices'
+import Services from './pages/services'
 import Cart from './pages/cart'
 import Checkout from './pages/checkout'
-import CustomOrder from './pages/CustomOrder'
+import CustomOrder from './pages/customOrder'
 import Profile from './pages/profile'
+import Login from './pages/login'
+import Register from './pages/register'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/custom-order" element={<CustomOrder />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
+    <AuthProvider>
+      <CartProvider>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* Protected Routes */}
+              <Route 
+                path="/cart" 
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/checkout" 
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/custom-order" 
+                element={
+                  <ProtectedRoute>
+                    <CustomOrder />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </CartProvider>
+    </AuthProvider>
   )
 }
 

@@ -1,42 +1,122 @@
-import React from 'react'
-import { Heart, ShoppingCart, Star } from 'lucide-react'
+import React, { useState } from 'react'
+import { Heart, ShoppingCart, Star, Eye, Share2 } from 'lucide-react'
 
 const ProductCard = ({ product, onCreatorClick }) => {
+  const [isWishlisted, setIsWishlisted] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  
   const {
     id,
     title,
     price,
+    originalPrice,
     image,
     creator,
     rating,
     reviewCount,
-    category
+    category,
+    isHandmade,
+    isEcoFriendly,
+    inStock = true
   } = product
 
+  const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0
+
+  const handleAddToCart = () => {
+    console.log('Added to cart:', id)
+    // Integration with cart context or API here
+  }
+
+  const handleToggleWishlist = () => {
+    setIsWishlisted(!isWishlisted)
+  }
+
+  const handleQuickView = () => {
+    console.log('Quick view:', id)
+  }
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `Check out this ${category.toLowerCase()} by ${creator.name}`,
+        url: window.location.href + `/products/${id}`
+      })
+    }
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group relative">
       {/* Product Image */}
       <div className="relative overflow-hidden">
         <img
           src={image}
           alt={title}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 ${!imageLoaded ? 'bg-gray-200 animate-pulse' : ''}`}
         />
-        <div className="absolute top-2 right-2">
-          <button className="p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors">
-            <Heart size={16} className="text-gray-400 hover:text-red-500" />
-          </button>
+        
+        {/* Overlay actions */}
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <div className="flex space-x-2">
+            <button onClick={handleQuickView} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
+              <Eye size={16} className="text-gray-700" />
+            </button>
+            <button onClick={handleShare} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
+              <Share2 size={16} className="text-gray-700" />
+            </button>
+          </div>
         </div>
-        <div className="absolute top-2 left-2">
-          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+
+        {/* Badges */}
+        <div className="absolute top-2 left-2 space-y-1">
+          <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
             {category}
           </span>
+          {discount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              {discount}% OFF
+            </span>
+          )}
+          {isHandmade && (
+            <span className="bg-amber-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              🤚 Handmade
+            </span>
+          )}
+          {isEcoFriendly && (
+            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              🌱 Eco-Friendly
+            </span>
+          )}
         </div>
+
+        {/* Wishlist button */}
+        <div className="absolute top-2 right-2">
+          <button 
+            onClick={handleToggleWishlist}
+            className={`p-2 rounded-full shadow-md transition-colors ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'}`}
+          >
+            <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} />
+          </button>
+        </div>
+
+        {/* Stock status */}
+        {!inStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <span className="bg-gray-900 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Out of Stock
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 cursor-pointer">
+        <h3 
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-purple-600 cursor-pointer transition-colors" 
+          onClick={() => onCreatorClick(creator)}
+          title={`View Products by ${creator.name}`}
+        >
           {title}
         </h3>
         
@@ -48,24 +128,38 @@ const ProductCard = ({ product, onCreatorClick }) => {
                 key={i}
                 size={12}
                 fill={i < Math.floor(rating) ? "currentColor" : "none"}
+                className="text-yellow-400"
               />
             ))}
           </div>
-          <span className="text-xs text-gray-500 ml-1">({reviewCount})</span>
+          <span className="text-xs text-gray-500 ml-2">
+            {rating?.toFixed(1)} ({reviewCount} reviews)
+          </span>
         </div>
 
         {/* Creator */}
         <button
           onClick={() => onCreatorClick(creator)}
-          className="text-sm text-gray-600 hover:text-blue-600 transition-colors mb-3"
+          className="text-sm text-gray-600 hover:text-purple-600 transition-colors mb-3 flex items-center space-x-1"
         >
-          by {creator.name}
+          <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full"></div>
+          <span>by {creator.name}</span>
+          {creator.isVerified && <span className="text-blue-500">✓</span>}
         </button>
 
         {/* Price and Actions */}
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-gray-900">₹{price}</span>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors">
+          <div className="flex items-center space-x-2">
+            <span className="text-lg font-bold text-gray-900">₹{price.toLocaleString()}</span>
+            {originalPrice && (
+              <span className="text-sm text-gray-500 line-through">₹{originalPrice.toLocaleString()}</span>
+            )}
+          </div>
+          <button 
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            className={`p-2 rounded-lg transition-colors ${inStock ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+          >
             <ShoppingCart size={16} />
           </button>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,13 @@ const Login = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  const from = location.state?.from?.pathname || "/"
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -17,26 +25,58 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+    if (error) setError('') // Clear error when user types
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Login attempt:', formData)
+    try {
+      await login(formData.email, formData.password)
+      navigate(from, { replace: true })
+    } catch (error) {
+      console.error('Login error:', error)
+      setError(getErrorMessage(error.code))
+    } finally {
       setIsLoading(false)
-      // Handle login logic here
-    }, 1000)
+    }
+  }
+
+  const getErrorMessage = (errorCode) => {
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'No account found with this email address.'
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.'
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.'
+      case 'auth/user-disabled':
+        return 'This account has been disabled.'
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later.'
+      case 'auth/invalid-credential':
+        return 'Invalid email or password. Please check your credentials.'
+      default:
+        return 'Login failed. Please check your credentials and try again.'
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">CK</span>
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+              CampusKala
+            </h1>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900">
             Welcome back!
           </h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -47,6 +87,14 @@ const Login = () => {
         {/* Login Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+                <AlertCircle className="text-red-500 mr-2" size={20} />
+                <span className="text-red-700 text-sm">{error}</span>
+              </div>
+            )}
+
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -64,7 +112,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10"
+                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10"
                   placeholder="Enter your email"
                 />
               </div>
@@ -87,7 +135,7 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10"
+                  className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 focus:z-10"
                   placeholder="Enter your password"
                 />
                 <button
@@ -113,14 +161,14 @@ const Login = () => {
                   type="checkbox"
                   checked={formData.rememberMe}
                   onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
                   Remember me
                 </label>
               </div>
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link to="/forgot-password" className="font-medium text-purple-600 hover:text-purple-500">
                   Forgot password?
                 </Link>
               </div>
@@ -131,7 +179,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
@@ -151,7 +199,7 @@ const Login = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link to="/register" className="font-medium text-purple-600 hover:text-purple-500">
                   Sign up now
                 </Link>
               </p>

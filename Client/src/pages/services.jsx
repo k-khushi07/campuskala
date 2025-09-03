@@ -405,6 +405,7 @@ const Services = () => {
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Clear all filters
+                  
                 </button>
               </div>
             )}
