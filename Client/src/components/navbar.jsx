@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, ShoppingCart, User, Menu, X, LogOut, Settings, Package, Heart } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -10,7 +9,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
 
   const { currentUser, userProfile, logout } = useAuth()
-  const { getCartCount } = useCart()
+  // ✅ Removed: const { getCartCount } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -93,14 +92,10 @@ const Navbar = () => {
 
             {currentUser ? (
               <>
-                {/* Cart Icon with Badge */}
+                {/* Cart Icon - Placeholder (no functionality) */}
                 <Link to="/cart" className="relative">
                   <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-purple-600 transition-colors" />
-                  {getCartCount() > 0 && (
-                    <span className="absolute -top-2 -right-2 h-5 w-5 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs">
-                      {getCartCount()}
-                    </span>
-                  )}
+                  {/* ✅ Removed cart count badge - now shows no count */}
                 </Link>
 
                 {/* User Menu */}
@@ -247,7 +242,7 @@ const Navbar = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <ShoppingCart className="mr-3" size={20} />
-                    Cart {getCartCount() > 0 && `(${getCartCount()})`}
+                    Cart {/* ✅ Removed cart count display */}
                   </Link>
                   <Link
                     to="/profile"

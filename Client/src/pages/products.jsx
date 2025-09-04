@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+//import React, { useState, useEffect } from 'react'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List, Star, Heart, ShoppingCart, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 

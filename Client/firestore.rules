@@ -3,25 +3,34 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Users can read and write their own profile only
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Products: Anyone can read, only authenticated users can write
     match /products/{productId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.sellerId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
-    // Services: Anyone can read, only authenticated users can write  
+    // Services: Anyone can read, only authenticated users can write
     match /services/{serviceId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.freelancerId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
-    // Orders: Only order owner can access
+    // Orders: Only order participants can access
     match /orders/{orderId} {
       allow read, write: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+        (resource.data.userId == request.auth.uid ||
+         resource.data.sellerId == request.auth.uid ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
     // Shopping carts: Only cart owner can access
@@ -29,16 +38,35 @@ service cloud.firestore {
       allow read, write: if request.auth != null && cartId == request.auth.uid;
     }
     
-    // Reviews: Anyone can read, only authenticated users can write
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // Chat conversations: Only participants can access
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid in resource.data.participants;
     }
     
-    // Categories: Anyone can read, only admins can write
-    match /categories/{categoryId} {
+    // Chat messages: Only conversation participants can access
+    match /messages/{messageId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants;
+    }
+    
+    // Reviews: Anyone can read, only authenticated users can write their own
+    match /reviews/{reviewId} {
       allow read: if true;
-      allow write: if request.auth != null && 
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        request.auth.uid == resource.data.buyerId;
+    }
+    
+    // Notifications: Users can only access their own notifications
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // Admin-only collections
+    match /analytics/{document=**} {
+      allow read, write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
