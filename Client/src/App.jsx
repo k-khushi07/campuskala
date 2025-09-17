@@ -11,6 +11,7 @@ import Services from './pages/services'
 import Cart from './pages/cart'
 import Checkout from './pages/checkout'
 import CustomOrder from './pages/customOrder'
+import Orders from './pages/orders'
 import Profile from './pages/profile'
 import Login from './pages/login'
 import Register from './pages/register'
@@ -49,6 +50,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CustomOrder />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute>
+                <Orders />
               </ProtectedRoute>
             } 
           />
