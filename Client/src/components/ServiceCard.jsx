@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { Clock, Star, MapPin, Award } from 'lucide-react'
+import DetailModal from './DetailModal'
 
 const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   
   const {
     id,
@@ -24,8 +26,13 @@ const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
     onBookingClick?.(service)
   }
 
+  const handleCardClick = () => {
+    setShowDetailModal(true)
+  }
+
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+    <>
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer" onClick={handleCardClick}>
       {/* Service Image */}
       <div className="relative overflow-hidden">
         <img
@@ -68,7 +75,7 @@ const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
 
       {/* Service Info */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-600 cursor-pointer transition-colors" onClick={() => onCreatorClick(creator)}>
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-600 transition-colors" title={title}>
           {title}
         </h3>
         
@@ -91,7 +98,10 @@ const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
 
         {/* Creator */}
         <button
-          onClick={() => onCreatorClick(creator)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onCreatorClick(creator)
+          }}
           className="text-sm text-gray-600 hover:text-green-600 transition-colors mb-3 flex items-center space-x-1"
         >
           <div className="w-4 h-4 bg-gradient-to-br from-green-400 to-green-600 rounded-full"></div>
@@ -121,7 +131,10 @@ const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
             <p className="text-xs text-gray-500">Starting price</p>
           </div>
           <button
-            onClick={handleBookNow}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleBookNow()
+            }}
             disabled={availability !== 'available'}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               availability === 'available'
@@ -134,6 +147,17 @@ const ServiceCard = ({ service, onCreatorClick, onBookingClick }) => {
         </div>
       </div>
     </div>
+
+    {/* Detail Modal */}
+    <DetailModal
+      item={service}
+      isOpen={showDetailModal}
+      onClose={() => setShowDetailModal(false)}
+      type="service"
+      onCreatorClick={onCreatorClick}
+      onBookingClick={onBookingClick}
+    />
+    </>
   )
 }
 

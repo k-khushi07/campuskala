@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, ShoppingCart, User, Menu, X, LogOut, Settings, Package, Heart } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
+import NotificationCenter from './NotificationCenter'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -9,6 +11,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
 
   const { currentUser, userProfile, logout } = useAuth()
+  const { count: cartCount } = useCart()
   // ✅ Removed: const { getCartCount } = useCart()
   const location = useLocation()
   const navigate = useNavigate()
@@ -89,13 +92,30 @@ const Navbar = () => {
             >
               Custom Order
             </Link>
+            {currentUser && (
+              <Link
+                to="/sell"
+                className={`text-sm font-medium transition-colors ${
+                  isActive('/sell') ? 'text-purple-600' : 'text-gray-700 hover:text-purple-600'
+                }`}
+              >
+                Sell
+              </Link>
+            )}
 
             {currentUser ? (
               <>
-                {/* Cart Icon - Placeholder (no functionality) */}
+                {/* Notifications */}
+                <NotificationCenter />
+
+                {/* Cart Icon with count */}
                 <Link to="/cart" className="relative">
                   <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-purple-600 transition-colors" />
-                  {/* ✅ Removed cart count badge - now shows no count */}
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
+                      {cartCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* User Menu */}
@@ -123,7 +143,7 @@ const Navbar = () => {
                         Profile
                       </Link>
                       <Link
-                        to="/profile"
+                        to="/orders"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -139,7 +159,7 @@ const Navbar = () => {
                         Wishlist
                       </Link>
                       <Link
-                        to="/profile"
+                        to="/profile?tab=settings"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -242,7 +262,7 @@ const Navbar = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <ShoppingCart className="mr-3" size={20} />
-                    Cart {/* ✅ Removed cart count display */}
+                    Cart{cartCount > 0 ? ` (${cartCount})` : ''}
                   </Link>
                   <Link
                     to="/profile"

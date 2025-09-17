@@ -19,7 +19,15 @@ import orderService from '../services/orderService'
 import notificationService from '../services/notificationService'
 import OrderTracking from './OrderTracking'
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 const OrderManagement = ({ userType = 'seller' }) => {
+=======
+const OrderManagement = () => {
+>>>>>>> Stashed changes
+=======
+const OrderManagement = () => {
+>>>>>>> Stashed changes
   const { currentUser } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -29,6 +37,8 @@ const OrderManagement = ({ userType = 'seller' }) => {
   const [showRejectionModal, setShowRejectionModal] = useState(false)
   const [activeTab, setActiveTab] = useState('details') // 'details' or 'tracking'
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // Get orders for current user (seller or buyer)
   const { orders: userOrders, loading: ordersLoading } = useRealtimeOrders(currentUser?.uid, userType)
 
@@ -38,6 +48,22 @@ const OrderManagement = ({ userType = 'seller' }) => {
       setLoading(false)
     }
   }, [userOrders])
+=======
+=======
+>>>>>>> Stashed changes
+  // Get orders for current user (seller)
+  const { orders: sellerOrders, loading: ordersLoading } = useRealtimeOrders(currentUser?.uid, 'seller')
+
+  useEffect(() => {
+    if (sellerOrders) {
+      setOrders(sellerOrders)
+      setLoading(false)
+    }
+  }, [sellerOrders])
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
   const handleApproveOrder = async (orderId) => {
     try {
@@ -123,6 +149,8 @@ const OrderManagement = ({ userType = 'seller' }) => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           {userType === 'seller' ? 'Order Management' : 'My Orders'}
         </h1>
@@ -132,6 +160,14 @@ const OrderManagement = ({ userType = 'seller' }) => {
             : 'Track your orders and view order history'
           }
         </p>
+=======
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Management</h1>
+        <p className="text-gray-600">Manage your product orders and service bookings</p>
+>>>>>>> Stashed changes
+=======
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Management</h1>
+        <p className="text-gray-600">Manage your product orders and service bookings</p>
+>>>>>>> Stashed changes
       </div>
 
       {/* Orders List */}
@@ -140,12 +176,20 @@ const OrderManagement = ({ userType = 'seller' }) => {
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <Package className="mx-auto text-gray-400 mb-4" size={48} />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             <p className="text-gray-600">
               {userType === 'seller' 
                 ? 'Orders will appear here when customers purchase your products or book your services.'
                 : 'Your orders will appear here once you make a purchase or book a service.'
               }
             </p>
+=======
+            <p className="text-gray-600">Orders will appear here when customers purchase your products or book your services.</p>
+>>>>>>> Stashed changes
+=======
+            <p className="text-gray-600">Orders will appear here when customers purchase your products or book your services.</p>
+>>>>>>> Stashed changes
           </div>
         ) : (
           orders.map((order) => (
@@ -264,6 +308,8 @@ const OrderManagement = ({ userType = 'seller' }) => {
                   <span>View Details</span>
                 </button>
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 {userType === 'seller' && (
                   <div className="flex space-x-2">
                     {order.status === 'pending_approval' && (
@@ -296,6 +342,43 @@ const OrderManagement = ({ userType = 'seller' }) => {
                     )}
                   </div>
                 )}
+=======
+=======
+>>>>>>> Stashed changes
+                <div className="flex space-x-2">
+                  {order.status === 'pending_approval' && (
+                    <>
+                      <button
+                        onClick={() => handleApproveOrder(order.id)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(order)
+                          setShowRejectionModal(true)
+                        }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  
+                  {order.status === 'approved' && (
+                    <button
+                      onClick={() => handleCompleteOrder(order.id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Mark Complete
+                    </button>
+                  )}
+                </div>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
               </div>
             </div>
           ))
@@ -401,6 +484,8 @@ const OrderManagement = ({ userType = 'seller' }) => {
                 )}
 
                     {/* Actions */}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     {userType === 'seller' && (
                       <div className="flex space-x-3 pt-4 border-t">
                         {selectedOrder.status === 'pending_approval' && (
@@ -433,6 +518,43 @@ const OrderManagement = ({ userType = 'seller' }) => {
                         )}
                       </div>
                     )}
+=======
+=======
+>>>>>>> Stashed changes
+                    <div className="flex space-x-3 pt-4 border-t">
+                      {selectedOrder.status === 'pending_approval' && (
+                        <>
+                          <button
+                            onClick={() => handleApproveOrder(selectedOrder.id)}
+                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            Approve Order
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowModal(false)
+                              setShowRejectionModal(true)
+                            }}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                          >
+                            Reject Order
+                          </button>
+                        </>
+                      )}
+                      
+                      {selectedOrder.status === 'approved' && (
+                        <button
+                          onClick={() => handleCompleteOrder(selectedOrder.id)}
+                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Mark Complete
+                        </button>
+                      )}
+                    </div>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                   </>
                 ) : (
                   /* Tracking Tab */

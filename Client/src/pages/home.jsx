@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, Filter, ChevronRight, Palette, Shirt, Camera, Music, Code, BookOpen, Star } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import ServiceCard from '../components/ServiceCard'
+import { useRealtimeProducts, useRealtimeServices } from '../hooks/useRealtime'
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('products')
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
-  // Sample data - replace with API calls
+  // Categories
   const categories = [
     { id: 'all', name: 'All', icon: <Filter size={16} /> },
     { id: 'art', name: 'Art', icon: <Palette size={16} /> },
@@ -19,119 +22,10 @@ const Home = () => {
     { id: 'education', name: 'Education', icon: <BookOpen size={16} /> },
   ]
 
-  const sampleProducts = [
-    {
-      id: 1,
-      title: 'Hand-painted Canvas Art',
-      price: 1200,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300',
-      creator: { id: 1, name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100' },
-      rating: 4.8,
-      reviewCount: 24,
-      category: 'Art'
-    },
-    {
-      id: 2,
-      title: 'Custom T-shirt Design',
-      price: 450,
-      image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300',
-      creator: { id: 2, name: 'Raj Patel', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
-      rating: 4.6,
-      reviewCount: 18,
-      category: 'Fashion'
-    },
-    {
-      id: 3,
-      title: 'Handmade Jewelry Set',
-      price: 800,
-      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300',
-      creator: { id: 3, name: 'Anita Kumar', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100' },
-      rating: 4.9,
-      reviewCount: 32,
-      category: 'Fashion'
-    },
-    {
-      id: 4,
-      title: 'Digital Portrait Art',
-      price: 600,
-      image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300',
-      creator: { id: 4, name: 'Vikash Singh', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
-      rating: 4.7,
-      reviewCount: 15,
-      category: 'Art'
-    },
-    {
-      id: 5,
-      title: 'Ceramic Coffee Mug',
-      price: 350,
-      image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcf93a?w=300',
-      creator: { id: 5, name: 'Sonal Dave', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
-      rating: 4.5,
-      reviewCount: 12,
-      category: 'Art'
-    },
-    {
-      id: 6,
-      title: 'Laptop Stickers Pack',
-      price: 200,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300',
-      creator: { id: 6, name: 'Karan Joshi', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
-      rating: 4.4,
-      reviewCount: 8,
-      category: 'Tech'
-    }
-  ]
+  // Live data
+  const { products: sampleProducts } = useRealtimeProducts({ sortBy: 'popular', limit: 24 })
 
-  const sampleServices = [
-    {
-      id: 1,
-      title: 'Portrait Photography Session',
-      priceRange: '₹1500-3000',
-      image: 'https://images.unsplash.com/photo-1554048612-b6ebae896fb5?w=300',
-      creator: { id: 5, name: 'Aditi Mehta', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
-      rating: 4.9,
-      reviewCount: 28,
-      category: 'Photography',
-      duration: '2-3 hours',
-      location: 'Campus & Nearby'
-    },
-    {
-      id: 2,
-      title: 'Guitar Lessons',
-      priceRange: '₹500-800/hr',
-      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=300',
-      creator: { id: 6, name: 'Arjun Reddy', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
-      rating: 4.8,
-      reviewCount: 22,
-      category: 'Music',
-      duration: '1 hour',
-      location: 'Music Room'
-    },
-    {
-      id: 3,
-      title: 'Web Development Help',
-      priceRange: '₹800-1200/hr',
-      image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=300',
-      creator: { id: 7, name: 'Sneha Gupta', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100' },
-      rating: 4.7,
-      reviewCount: 19,
-      category: 'Tech',
-      duration: '1-2 hours',
-      location: 'Online/Campus'
-    },
-    {
-      id: 4,
-      title: 'Math Tutoring',
-      priceRange: '₹400-600/hr',
-      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300',
-      creator: { id: 8, name: 'Rohit Sharma', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
-      rating: 4.6,
-      reviewCount: 16,
-      category: 'Education',
-      duration: '1 hour',
-      location: 'Library/Online'
-    }
-  ]
+  const { services: sampleServices } = useRealtimeServices({ limit: 24 })
 
   const featuredCreators = [
     {
@@ -169,18 +63,33 @@ const Home = () => {
   ]
 
   const handleCreatorClick = (creator) => {
-    // Navigate to creator profile
     console.log('Navigate to creator:', creator.id)
+  }
+
+  const handleViewAll = () => {
+    navigate(activeTab === 'products' ? '/products' : '/services')
+  }
+
+  const handleBecomeCreator = () => {
+    navigate('/sell')
+  }
+
+  const handleLearnMore = () => {
+    navigate('/services')
+  }
+
+  const handleBookingClick = (service) => {
+    console.log('Booking service:', service?.id)
+    navigate('/custom-order')
   }
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value)
   }
 
-  const filteredData = () => {
+  const filteredData = useMemo(() => {
     const data = activeTab === 'products' ? sampleProducts : 
                   activeTab === 'services' ? sampleServices : []
-    
     return data.filter(item => {
       const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.creator.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -188,7 +97,7 @@ const Home = () => {
                              item.category.toLowerCase() === categories.find(c => c.id === selectedCategory)?.name.toLowerCase()
       return matchesSearch && matchesCategory
     })
-  }
+  }, [activeTab, sampleProducts, sampleServices, searchQuery, selectedCategory])
 
   const renderCustomOrdersContent = () => (
     <div className="py-12">
@@ -303,7 +212,7 @@ const Home = () => {
         <section className="py-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Featured Creators</h2>
-            <button className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
+            <button onClick={handleViewAll} className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
               View All <ChevronRight size={16} className="ml-1" />
             </button>
           </div>
@@ -354,13 +263,13 @@ const Home = () => {
                 )}
               </h2>
               <div className="text-sm text-gray-500">
-                {filteredData().length} {activeTab} found
+                {filteredData.length} {activeTab} found
               </div>
             </div>
 
             {/* Products/Services Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredData().map((item) => (
+              {filteredData.map((item) => (
                 activeTab === 'products' ? (
                   <ProductCard 
                     key={item.id} 
@@ -372,13 +281,14 @@ const Home = () => {
                     key={item.id} 
                     service={item} 
                     onCreatorClick={handleCreatorClick}
+                    onBookingClick={handleBookingClick}
                   />
                 )
               ))}
             </div>
 
             {/* No Results */}
-            {filteredData().length === 0 && (
+            {filteredData.length === 0 && (
               <div className="text-center py-12">
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
                   <Search className="text-gray-400" size={24} />
@@ -411,10 +321,10 @@ const Home = () => {
               Join our community of talented creators and start showcasing your skills to fellow students.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium transition-colors">
+              <button onClick={handleBecomeCreator} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium transition-colors">
                 Become a Creator
               </button>
-              <button className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full font-medium transition-colors">
+              <button onClick={handleLearnMore} className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full font-medium transition-colors">
                 Learn More
               </button>
             </div>

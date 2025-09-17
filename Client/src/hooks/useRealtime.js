@@ -200,7 +200,7 @@ export const useRealtimeServices = (filters = {}) => {
 }
 
 // Real-time orders hook
-export const useRealtimeOrders = (userId) => {
+export const useRealtimeOrders = (userId, userType = 'buyer') => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -210,9 +210,10 @@ export const useRealtimeOrders = (userId) => {
       return
     }
 
+    const field = userType === 'seller' ? 'sellerId' : 'buyerId'
     const q = query(
       collection(db, 'orders'),
-      where('userId', '==', userId),
+      where(field, '==', userId),
       orderBy('createdAt', 'desc')
     )
 
@@ -226,7 +227,7 @@ export const useRealtimeOrders = (userId) => {
     })
 
     return () => unsubscribe()
-  }, [userId])
+  }, [userId, userType])
 
   return { orders, loading }
 }

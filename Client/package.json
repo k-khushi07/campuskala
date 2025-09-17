@@ -13,8 +13,9 @@
     "emulators": "firebase emulators:start"
   },
   "dependencies": {
-    "firebase": "^10.14.1",
-    "lucide-react": "^0.323.0",
+    "@stripe/stripe-js": "^2.4.0",
+    "firebase": "^10.8.0",
+    "lucide-react": "^0.544.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1"

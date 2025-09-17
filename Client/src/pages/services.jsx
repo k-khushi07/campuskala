@@ -1,4 +1,7 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useRealtimeServices } from '../hooks/useRealtime'
+import { useCart } from '../context/CartContext'
 import { Search, Filter, MapPin, Clock, Star, Calendar, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import ServiceCard from '../components/ServiceCard'
 
@@ -9,6 +12,7 @@ const Services = () => {
   const [location, setLocation] = useState('all')
   const [duration, setDuration] = useState('all')
   const [sortBy, setSortBy] = useState('popular')
+  const navigate = useNavigate()
   const [showFilters, setShowFilters] = useState(false)
 
   const categories = [
@@ -46,164 +50,9 @@ const Services = () => {
     { value: 'rating', label: 'Highest Rated' },
   ]
 
-  const services = [
-    {
-      id: 1,
-      title: 'Portrait Photography Session',
-      priceRange: '₹1500-3000',
-      minPrice: 1500,
-      maxPrice: 3000,
-      image: 'https://images.unsplash.com/photo-1554048612-b6ebae896fb5?w=400',
-      creator: { 
-        id: 1, 
-        name: 'Aditi Mehta', 
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
-        verified: true 
-      },
-      rating: 4.9,
-      reviewCount: 28,
-      category: 'photography',
-      duration: '2-3 hours',
-      location: 'Campus & Nearby',
-      locationType: 'hybrid',
-      tags: ['portrait', 'graduation', 'professional'],
-      description: 'Professional portrait photography for graduation, LinkedIn, or personal use.',
-      availability: 'Available this week',
-      responseTime: '< 2 hours',
-      completedOrders: 45,
-      isTopRated: true
-    },
-    {
-      id: 2,
-      title: 'Guitar Lessons (Beginner to Intermediate)',
-      priceRange: '₹500-800/hr',
-      minPrice: 500,
-      maxPrice: 800,
-      image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400',
-      creator: { 
-        id: 2, 
-        name: 'Arjun Reddy', 
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-        verified: true 
-      },
-      rating: 4.8,
-      reviewCount: 22,
-      category: 'music',
-      duration: '1 hour',
-      location: 'Music Room',
-      locationType: 'campus',
-      tags: ['guitar', 'acoustic', 'beginner'],
-      description: 'Learn guitar from basics to intermediate level. Acoustic and electric guitar lessons available.',
-      availability: 'Available daily',
-      responseTime: '< 1 hour',
-      completedOrders: 67,
-      isTopRated: true
-    },
-    {
-      id: 3,
-      title: 'Web Development Tutoring',
-      priceRange: '₹800-1200/hr',
-      minPrice: 800,
-      maxPrice: 1200,
-      image: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
-      creator: { 
-        id: 3, 
-        name: 'Sneha Gupta', 
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100',
-        verified: true 
-      },
-      rating: 4.7,
-      reviewCount: 19,
-      category: 'tech',
-      duration: '1-2 hours',
-      location: 'Online/Campus',
-      locationType: 'hybrid',
-      tags: ['react', 'javascript', 'web development'],
-      description: 'Personalized web development tutoring covering HTML, CSS, JavaScript, React and more.',
-      availability: 'Available weekends',
-      responseTime: '< 4 hours',
-      completedOrders: 34,
-      isTopRated: false
-    },
-    {
-      id: 4,
-      title: 'Math & Physics Tutoring',
-      priceRange: '₹400-600/hr',
-      minPrice: 400,
-      maxPrice: 600,
-      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400',
-      creator: { 
-        id: 4, 
-        name: 'Rohit Sharma', 
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        verified: true 
-      },
-      rating: 4.6,
-      reviewCount: 16,
-      category: 'tutoring',
-      duration: '1 hour',
-      location: 'Library/Online',
-      locationType: 'hybrid',
-      tags: ['mathematics', 'physics', 'exam prep'],
-      description: 'Expert tutoring in mathematics and physics for all levels. Exam preparation available.',
-      availability: 'Available evenings',
-      responseTime: '< 3 hours',
-      completedOrders: 28,
-      isTopRated: false
-    },
-    {
-      id: 5,
-      title: 'Graphic Design Services',
-      priceRange: '₹1000-2500',
-      minPrice: 1000,
-      maxPrice: 2500,
-      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400',
-      creator: { 
-        id: 5, 
-        name: 'Kavya Patel', 
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100',
-        verified: false 
-      },
-      rating: 4.5,
-      reviewCount: 12,
-      category: 'design',
-      duration: '2-5 days',
-      location: 'Online',
-      locationType: 'online',
-      tags: ['logo design', 'posters', 'branding'],
-      description: 'Professional graphic design for logos, posters, social media content, and branding materials.',
-      availability: 'Available this month',
-      responseTime: '< 6 hours',
-      completedOrders: 15,
-      isTopRated: false
-    },
-    {
-      id: 6,
-      title: 'Spanish Language Lessons',
-      priceRange: '₹600-900/hr',
-      minPrice: 600,
-      maxPrice: 900,
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400',
-      creator: { 
-        id: 6, 
-        name: 'Maria Rodriguez', 
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-        verified: true 
-      },
-      rating: 4.8,
-      reviewCount: 25,
-      category: 'language',
-      duration: '1 hour',
-      location: 'Language Lab/Online',
-      locationType: 'hybrid',
-      tags: ['spanish', 'conversation', 'beginner'],
-      description: 'Learn Spanish from a native speaker. Conversational Spanish and grammar lessons available.',
-      availability: 'Available Mon-Fri',
-      responseTime: '< 2 hours',
-      completedOrders: 41,
-      isTopRated: true
-    }
-  ]
+  const { services: servicesRealtime, loading } = useRealtimeServices()
+  const services = servicesRealtime
+  const { addToCart } = useCart()
 
   const filteredServices = services.filter(service => {
     const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -235,7 +84,27 @@ const Services = () => {
   }
 
   const handleBookService = (service) => {
-    console.log('Book service:', service.id)
+    const cartItem = {
+      id: `service-${service.id}`,
+      title: service.title,
+      price: service.minPrice || 0,
+      image: service.image,
+      type: 'service',
+      category: service.category || 'service',
+      inStock: true,
+      maxQuantity: 10,
+      deliveryTime: '2-5 days',
+      campusPickup: false,
+      creator: {
+        id: service.creator?.id || 'service-creator',
+        name: service.creator?.name || 'Service Provider',
+        avatar: service.creator?.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+        isVerified: (service.creator?.isVerified ?? service.creator?.verified) || false,
+        campusYear: service.creator?.campusYear || '—'
+      }
+    }
+    addToCart(cartItem)
+    navigate('/cart')
   }
 
   return (
@@ -375,14 +244,16 @@ const Services = () => {
             </div>
 
             {/* Services Grid */}
-            {sortedServices.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">Loading...</div>
+            ) : sortedServices.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {sortedServices.map(service => (
                   <ServiceCard
                     key={service.id}
                     service={service}
                     onCreatorClick={handleCreatorClick}
-                    onBookService={handleBookService}
+                    onBookingClick={handleBookService}
                   />
                 ))}
               </div>
@@ -420,7 +291,7 @@ const Services = () => {
                   <p className="text-gray-600 mb-6">
                     Our team can help match you with the perfect service provider for your needs.
                   </p>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                  <button onClick={() => navigate('/custom-order')} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                     Get Personalized Recommendations
                   </button>
                 </div>

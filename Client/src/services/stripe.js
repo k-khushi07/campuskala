@@ -1,10 +1,11 @@
-/*import { loadStripe } from '@stripe/stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
 import { httpsCallable } from 'firebase/functions'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { functions, db } from './firebase'
 
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+// Initialize Stripe (guard against missing key to avoid runtime IntegrationError)
+const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+const stripePromise = publishableKey ? loadStripe(publishableKey) : Promise.resolve(null)
 
 class StripeService {
   constructor() {
@@ -18,6 +19,9 @@ class StripeService {
 
   // Create payment intent for one-time payments
   async createPaymentIntent(amount, currency = 'inr', metadata = {}) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent')
       const result = await createPaymentIntent({
@@ -35,6 +39,9 @@ class StripeService {
 
   // Create checkout session for products/services
   async createCheckoutSession(items, successUrl, cancelUrl, metadata = {}) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession')
       const result = await createCheckoutSession({
@@ -64,6 +71,9 @@ class StripeService {
 
   // Redirect to Stripe Checkout
   async redirectToCheckout(sessionId) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     if (!this.stripe) {
       await this.init()
     }
@@ -80,6 +90,9 @@ class StripeService {
 
   // Create subscription for premium features
   async createSubscription(priceId, successUrl, cancelUrl) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const createSubscription = httpsCallable(functions, 'createSubscription')
       const result = await createSubscription({
@@ -97,6 +110,9 @@ class StripeService {
 
   // Cancel subscription
   async cancelSubscription(subscriptionId) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const cancelSubscription = httpsCallable(functions, 'cancelSubscription')
       const result = await cancelSubscription({ subscription_id: subscriptionId })
@@ -110,6 +126,9 @@ class StripeService {
 
   // Get customer's payment methods
   async getPaymentMethods(customerId) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const getPaymentMethods = httpsCallable(functions, 'getPaymentMethods')
       const result = await getPaymentMethods({ customer_id: customerId })
@@ -123,6 +142,9 @@ class StripeService {
 
   // Create setup intent for saving payment methods
   async createSetupIntent(customerId) {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const createSetupIntent = httpsCallable(functions, 'createSetupIntent')
       const result = await createSetupIntent({ customer_id: customerId })
@@ -136,6 +158,9 @@ class StripeService {
 
   // Process refund
   async processRefund(paymentIntentId, amount, reason = 'requested_by_customer') {
+    if (!publishableKey) {
+      throw new Error('Stripe is not configured. Set VITE_STRIPE_PUBLISHABLE_KEY in your .env')
+    }
     try {
       const processRefund = httpsCallable(functions, 'processRefund')
       const result = await processRefund({
@@ -178,4 +203,4 @@ class StripeService {
 }
 
 export const stripeService = new StripeService()
-export default stripeService*/
+export default stripeService

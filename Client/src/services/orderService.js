@@ -1,166 +1,176 @@
 import { 
   collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
+  addDoc, 
   query, 
   where, 
   orderBy, 
-  limit, 
-  onSnapshot,
-  addDoc,
-  serverTimestamp 
+  onSnapshot, 
+  updateDoc, 
+  doc,
+  serverTimestamp,
+  getDocs
 } from 'firebase/firestore'
-import { db, logEvent } from './firebase'
+import { db } from './firebase'
+import notificationService from './notificationService'
 
 class OrderService {
-  // Get order by ID
-  async getOrder(orderId) {
+  // Create a new order
+  async createOrder(orderData) {
     try {
-      const orderDoc = await getDoc(doc(db, 'orders', orderId))
-      return orderDoc.exists() ? { id: orderDoc.id, ...orderDoc.data() } : null
-    } catch (error) {
-      console.error('Error getting order:', error)
-      throw error
-    }
-  }
-
-  // Get orders for user
-  async getUserOrders(userId, limitCount = 20) {
-    try {
-      const q = query(
-        collection(db, 'orders'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      )
-      
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-    } catch (error) {
-      console.error('Error getting user orders:', error)
-      throw error
-    }
-  }
-
-  // Get orders for seller
-  async getSellerOrders(sellerId, limitCount = 20) {
-    try {
-      const q = query(
-        collection(db, 'orders'),
-        where('items.sellerId', 'array-contains', sellerId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      )
-      
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-    } catch (error) {
-      console.error('Error getting seller orders:', error)
-      throw error
-    }
-  }
-
-  // Listen to order updates
-  listenToOrder(orderId, callback) {
-    return onSnapshot(
-      doc(db, 'orders', orderId),
-      (doc) => {
-        if (doc.exists()) {
-          callback({ id: doc.id, ...doc.data() })
-        }
-      },
-      (error) => {
-        console.error('Error listening to order:', error)
+      const order = {
+        ...orderData,
+        status: orderData.status || 'pending_approval', // Allow custom status
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        paymentStatus: 'pending',
+        deliveryStatus: 'not_started'
       }
-    )
+      
+      const docRef = await addDoc(collection(db, 'orders'), order)
+      const orderId = docRef.id
+      
+      // Create notification for service provider (only if seller is specified)
+      if (orderData.sellerId) {
+        await notificationService.notifyOrderCreated({
+          id: orderId,
+          ...orderData
+        })
+      }
+      
+      return { id: orderId, ...order }
+    } catch (error) {
+      console.error('Error creating order:', error)
+      throw error
+    }
   }
 
-  // Listen to user orders
-  listenToUserOrders(userId, callback, limitCount = 20) {
-    const q = query(
-      collection(db, 'orders'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    )
-    
-    return onSnapshot(q, (snapshot) => {
-      const orders = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      callback(orders)
-    }, (error) => {
-      console.error('Error listening to user orders:', error)
-    })
+  // Get orders for a specific user (buyer)
+  async getUserOrders(userId) {
+    try {
+      const q = query(
+        collection(db, 'orders'),
+        where('buyerId', '==', userId),
+        orderBy('createdAt', 'desc')
+      )
+      
+      return q
+    } catch (error) {
+      console.error('Error fetching user orders:', error)
+      throw error
+    }
+  }
+
+  // Get orders for a specific seller/service provider
+  async getSellerOrders(sellerId) {
+    try {
+      const q = query(
+        collection(db, 'orders'),
+        where('sellerId', '==', sellerId),
+        orderBy('createdAt', 'desc')
+      )
+      
+      return q
+    } catch (error) {
+      console.error('Error fetching seller orders:', error)
+      throw error
+    }
+  }
+
+  // Approve an order
+  async approveOrder(orderId, sellerId) {
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        status: 'approved',
+        approvedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
+      
+      if (orderData) {
+        // Notify buyer about approval
+        await notificationService.notifyOrderApproved({
+          id: orderId,
+          ...orderData
+        })
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error approving order:', error)
+      throw error
+    }
+  }
+
+  // Reject an order
+  async rejectOrder(orderId, sellerId, reason) {
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        status: 'rejected',
+        rejectedAt: serverTimestamp(),
+        rejectionReason: reason,
+        updatedAt: serverTimestamp()
+      })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
+      
+      if (orderData) {
+        // Notify buyer about rejection
+        await notificationService.notifyOrderRejected({
+          id: orderId,
+          ...orderData
+        }, reason)
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error rejecting order:', error)
+      throw error
+    }
+  }
+
+  // Mark order as completed
+  async completeOrder(orderId, sellerId) {
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        status: 'completed',
+        completedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
+      
+      if (orderData) {
+        // Notify buyer about completion
+        await notificationService.notifyOrderCompleted({
+          id: orderId,
+          ...orderData
+        })
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error completing order:', error)
+      throw error
+    }
   }
 
   // Update order status
-  async updateOrderStatus(orderId, newStatus, updateData = {}) {
+  async updateOrderStatus(orderId, status, additionalData = {}) {
     try {
-      const updateObj = {
-        status: newStatus,
+      const updateData = {
+        status,
         updatedAt: serverTimestamp(),
-        ...updateData
+        ...additionalData
       }
       
-      // Add status-specific fields
-      switch (newStatus) {
-        case 'processing':
-          updateObj.processingStarted = serverTimestamp()
-          break
-        case 'shipped':
-          updateObj.shippedAt = serverTimestamp()
-          if (updateData.trackingNumber) {
-            updateObj.trackingNumber = updateData.trackingNumber
-          }
-          if (updateData.estimatedDelivery) {
-            updateObj.estimatedDelivery = updateData.estimatedDelivery
-          }
-          break
-        case 'delivered':
-          updateObj.deliveredAt = serverTimestamp()
-          break
-        case 'cancelled':
-          updateObj.cancelledAt = serverTimestamp()
-          if (updateData.cancellationReason) {
-            updateObj.cancellationReason = updateData.cancellationReason
-          }
-          break
-      }
-      
-      await updateDoc(doc(db, 'orders', orderId), updateObj)
-      
-      // Create status update notification
-      const order = await this.getOrder(orderId)
-      if (order) {
-        await addDoc(collection(db, 'notifications'), {
-          userId: order.userId,
-          type: 'order_status_update',
-          title: `Order ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
-          message: `Your order #${orderId.slice(-6)} has been ${newStatus}`,
-          orderId,
-          read: false,
-          createdAt: serverTimestamp()
-        })
-        
-        // Log status change event
-        logEvent('order_status_change', {
-          order_id: orderId,
-          previous_status: order.status,
-          new_status: newStatus,
-          order_value: order.totalAmount
-        })
-      }
-      
+      await updateDoc(doc(db, 'orders', orderId), updateData)
       return true
     } catch (error) {
       console.error('Error updating order status:', error)
@@ -168,268 +178,212 @@ class OrderService {
     }
   }
 
-  // Update payment status
-  async updatePaymentStatus(orderId, paymentStatus, paymentData = {}) {
+  // Get order by ID
+  async getOrderById(orderId) {
     try {
-      const updateObj = {
-        paymentStatus,
-        updatedAt: serverTimestamp(),
-        ...paymentData
-      }
-      
-      if (paymentStatus === 'paid') {
-        updateObj.paidAt = serverTimestamp()
-      } else if (paymentStatus === 'failed') {
-        updateObj.paymentFailedAt = serverTimestamp()
-      }
-      
-      await updateDoc(doc(db, 'orders', orderId), updateObj)
-      
-      // If payment is successful, update order status to processing
-      if (paymentStatus === 'paid') {
-        await this.updateOrderStatus(orderId, 'processing')
-      }
-      
-      return true
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      return orderDoc.docs[0]?.data()
     } catch (error) {
-      console.error('Error updating payment status:', error)
+      console.error('Error fetching order:', error)
       throw error
     }
   }
 
-  // Cancel order
-  async cancelOrder(orderId, reason, userId) {
+  // Create order from cart items
+  async createOrderFromCart(cartItems, buyerInfo) {
     try {
-      const order = await this.getOrder(orderId)
+      const orders = []
       
-      if (!order) {
-        throw new Error('Order not found')
+      // Group items by seller
+      const itemsBySeller = cartItems.reduce((acc, item) => {
+        const sellerId = item.creator.id
+        if (!acc[sellerId]) {
+          acc[sellerId] = {
+            sellerId,
+            sellerName: item.creator.name,
+            items: []
+          }
+        }
+        acc[sellerId].items.push(item)
+        return acc
+      }, {})
+
+      // Create separate order for each seller
+      for (const [sellerId, sellerData] of Object.entries(itemsBySeller)) {
+        const totalAmount = sellerData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        
+        const orderData = {
+          buyerId: buyerInfo.id,
+          buyerName: buyerInfo.name,
+          buyerEmail: buyerInfo.email,
+          sellerId: sellerData.sellerId,
+          sellerName: sellerData.sellerName,
+          items: sellerData.items,
+          totalAmount,
+          type: 'product',
+          status: 'pending_approval',
+          paymentMethod: 'online',
+          deliveryAddress: buyerInfo.address,
+          specialInstructions: buyerInfo.instructions || ''
+        }
+        
+        const order = await this.createOrder(orderData)
+        orders.push(order)
       }
       
-      if (order.userId !== userId) {
-        throw new Error('Unauthorized to cancel this order')
+      return orders
+    } catch (error) {
+      console.error('Error creating orders from cart:', error)
+      throw error
+    }
+  }
+
+  // Create service booking order
+  async createServiceOrder(serviceData, buyerInfo, bookingDetails) {
+    try {
+      const orderData = {
+        buyerId: buyerInfo.id,
+        buyerName: buyerInfo.name,
+        buyerEmail: buyerInfo.email,
+        sellerId: serviceData.creator.id,
+        sellerName: serviceData.creator.name,
+        service: serviceData,
+        totalAmount: serviceData.minPrice || 0,
+        type: 'service',
+        status: 'pending_approval',
+        paymentMethod: 'online',
+        bookingDetails: {
+          preferredDate: bookingDetails.preferredDate,
+          preferredTime: bookingDetails.preferredTime,
+          location: bookingDetails.location,
+          specialRequirements: bookingDetails.requirements || ''
+        },
+        deliveryAddress: buyerInfo.address,
+        specialInstructions: buyerInfo.instructions || ''
       }
       
-      if (order.status === 'delivered' || order.status === 'cancelled') {
-        throw new Error(`Cannot cancel order with status: ${order.status}`)
-      }
-      
-      // Update order status
-      await this.updateOrderStatus(orderId, 'cancelled', {
-        cancellationReason: reason,
-        cancelledBy: 'customer'
+      return await this.createOrder(orderData)
+    } catch (error) {
+      console.error('Error creating service order:', error)
+      throw error
+    }
+  }
+
+  // Create a proposal for a custom order
+  async createProposal(proposalData) {
+    try {
+      const docRef = await addDoc(collection(db, 'proposals'), proposalData)
+      return { id: docRef.id, ...proposalData }
+    } catch (error) {
+      console.error('Error creating proposal:', error)
+      throw error
+    }
+  }
+
+  // Get proposals for a specific order
+  async getOrderProposals(orderId) {
+    try {
+      const q = query(
+        collection(db, 'proposals'),
+        where('orderId', '==', orderId),
+        orderBy('createdAt', 'desc')
+      )
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    } catch (error) {
+      console.error('Error getting proposals:', error)
+      throw error
+    }
+  }
+
+  // Accept a proposal (buyer accepts seller's proposal)
+  async acceptProposal(proposalId, orderId) {
+    try {
+      // Update proposal status
+      await updateDoc(doc(db, 'proposals', proposalId), {
+        status: 'accepted',
+        acceptedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       })
-      
-      // If payment was made, initiate refund process
-      if (order.paymentStatus === 'paid' && order.stripePaymentIntentId) {
-        // Note: Actual refund would be handled by webhook or admin action
-        await addDoc(collection(db, 'refund_requests'), {
-          orderId,
-          amount: order.totalAmount,
-          reason,
-          status: 'pending',
-          requestedBy: userId,
-          requestedAt: serverTimestamp()
+
+      // Get proposal data
+      const proposalDoc = await getDocs(query(collection(db, 'proposals'), where('__name__', '==', proposalId)))
+      const proposalData = proposalDoc.docs[0]?.data()
+
+      if (proposalData) {
+        // Update order with seller info
+        await updateDoc(doc(db, 'orders', orderId), {
+          status: 'pending_approval',
+          sellerId: proposalData.sellerId,
+          sellerName: proposalData.sellerName,
+          sellerEmail: proposalData.sellerEmail,
+          acceptedProposalId: proposalId,
+          acceptedPrice: proposalData.proposedPrice,
+          acceptedTimeline: proposalData.proposedTimeline,
+          acceptedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        })
+
+        // Notify seller that their proposal was accepted
+        await notificationService.createNotification({
+          type: 'proposal_accepted',
+          title: 'Proposal Accepted!',
+          message: `Your proposal for "${proposalData.itemTitle || 'custom order'}" has been accepted`,
+          recipientId: proposalData.sellerId,
+          orderId: orderId,
+          data: {
+            orderId: orderId,
+            buyerName: proposalData.buyerName,
+            itemTitle: proposalData.itemTitle,
+            acceptedPrice: proposalData.proposedPrice
+          }
         })
       }
       
-      // Log cancellation event
-      logEvent('order_cancelled', {
-        order_id: orderId,
-        cancellation_reason: reason,
-        order_value: order.totalAmount
-      })
-      
       return true
     } catch (error) {
-      console.error('Error cancelling order:', error)
+      console.error('Error accepting proposal:', error)
       throw error
     }
   }
 
-  // Rate order (after delivery)
-  async rateOrder(orderId, rating, review, userId) {
+  // Accept a custom order (when seller accepts a custom request)
+  async acceptCustomOrder(orderId, sellerId, sellerName) {
     try {
-      const order = await this.getOrder(orderId)
-      
-      if (!order) {
-        throw new Error('Order not found')
-      }
-      
-      if (order.userId !== userId) {
-        throw new Error('Unauthorized to rate this order')
-      }
-      
-      if (order.status !== 'delivered') {
-        throw new Error('Can only rate delivered orders')
-      }
-      
-      // Update order with rating
       await updateDoc(doc(db, 'orders', orderId), {
-        rating: Math.max(1, Math.min(5, rating)), // Ensure rating is between 1-5
-        review,
-        reviewedAt: serverTimestamp(),
+        status: 'pending_approval',
+        sellerId: sellerId,
+        sellerName: sellerName,
+        acceptedAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
       
-      // Create reviews for individual items/sellers
-      for (const item of order.items) {
-        if (item.sellerId) {
-          await addDoc(collection(db, 'reviews'), {
-            orderId,
-            itemId: item.id,
-            sellerId: item.sellerId,
-            buyerId: userId,
-            buyerName: order.userName,
-            rating,
-            review,
-            itemType: item.type,
-            createdAt: serverTimestamp()
-          })
-        }
+      if (orderData) {
+        // Notify buyer that seller accepted their custom order
+        await notificationService.createNotification({
+          type: 'custom_order_accepted',
+          title: 'Custom Order Accepted',
+          message: `${sellerName} has accepted your custom order request`,
+          recipientId: orderData.buyerId,
+          orderId: orderId,
+          data: {
+            orderId: orderId,
+            sellerName: sellerName,
+            itemTitle: orderData.itemTitle
+          }
+        })
       }
-      
-      // Log review event
-      logEvent('order_reviewed', {
-        order_id: orderId,
-        rating,
-        order_value: order.totalAmount
-      })
       
       return true
     } catch (error) {
-      console.error('Error rating order:', error)
+      console.error('Error accepting custom order:', error)
       throw error
     }
-  }
-
-  // Get order statistics for seller dashboard
-  async getOrderStats(sellerId, timeRange = '30d') {
-    try {
-      // Calculate date range
-      const now = new Date()
-      const startDate = new Date()
-      
-      switch (timeRange) {
-        case '7d':
-          startDate.setDate(now.getDate() - 7)
-          break
-        case '30d':
-          startDate.setDate(now.getDate() - 30)
-          break
-        case '90d':
-          startDate.setDate(now.getDate() - 90)
-          break
-        case '1y':
-          startDate.setFullYear(now.getFullYear() - 1)
-          break
-        default:
-          startDate.setDate(now.getDate() - 30)
-      }
-      
-      const q = query(
-        collection(db, 'orders'),
-        where('items.sellerId', 'array-contains', sellerId),
-        where('createdAt', '>=', startDate),
-        orderBy('createdAt', 'desc')
-      )
-      
-      const querySnapshot = await getDocs(q)
-      const orders = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      
-      // Calculate statistics
-      const stats = {
-        totalOrders: orders.length,
-        totalRevenue: 0,
-        averageOrderValue: 0,
-        completedOrders: 0,
-        pendingOrders: 0,
-        cancelledOrders: 0,
-        averageRating: 0,
-        totalReviews: 0
-      }
-      
-      orders.forEach(order => {
-        const sellerItems = order.items.filter(item => item.sellerId === sellerId)
-        const sellerRevenue = sellerItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-        stats.totalRevenue += sellerRevenue
-        
-        switch (order.status) {
-          case 'delivered':
-            stats.completedOrders++
-            break
-          case 'pending':
-          case 'processing':
-          case 'shipped':
-            stats.pendingOrders++
-            break
-          case 'cancelled':
-            stats.cancelledOrders++
-            break
-        }
-        
-        if (order.rating) {
-          stats.averageRating += order.rating
-          stats.totalReviews++
-        }
-      })
-      
-      stats.averageOrderValue = stats.totalOrders > 0 ? stats.totalRevenue / stats.totalOrders : 0
-      stats.averageRating = stats.totalReviews > 0 ? stats.averageRating / stats.totalReviews : 0
-      
-      return stats
-    } catch (error) {
-      console.error('Error getting order stats:', error)
-      throw error
-    }
-  }
-
-  // Format order for display
-  formatOrderForDisplay(order) {
-    return {
-      ...order,
-      formattedTotal: new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 0
-      }).format(order.totalAmount),
-      
-      formattedDate: order.createdAt?.toDate ? 
-        order.createdAt.toDate().toLocaleDateString('en-IN') : 
-        new Date(order.createdAt).toLocaleDateString('en-IN'),
-      
-      statusColor: this.getStatusColor(order.status),
-      statusText: this.getStatusText(order.status)
-    }
-  }
-
-  // Get status color for UI
-  getStatusColor(status) {
-    const colors = {
-      pending: 'orange',
-      processing: 'blue',
-      shipped: 'purple',
-      delivered: 'green',
-      cancelled: 'red'
-    }
-    return colors[status] || 'gray'
-  }
-
-  // Get human-readable status text
-  getStatusText(status) {
-    const texts = {
-      pending: 'Order Placed',
-      processing: 'Processing',
-      shipped: 'Shipped',
-      delivered: 'Delivered',
-      cancelled: 'Cancelled'
-    }
-    return texts[status] || status
   }
 }
 
-export const orderService = new OrderService()
-export default orderService
+export default new OrderService()

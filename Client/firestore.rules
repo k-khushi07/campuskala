@@ -25,12 +25,19 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
-    // Orders: Only order participants can access
+    // Orders: Allow broader access for custom order management
     match /orders/{orderId} {
-      allow read, write: if request.auth != null && 
-        (resource.data.userId == request.auth.uid ||
-         resource.data.sellerId == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow read, write: if true;
+    }
+    
+    // Proposals: Allow broader access for proposal system
+    match /proposals/{proposalId} {
+      allow read, write: if true;
+    }
+    
+    // Order tracking: Allow broader access for real-time tracking
+    match /orderTracking/{trackingId} {
+      allow read, write: if true;
     }
     
     // Shopping carts: Only cart owner can access
@@ -61,7 +68,8 @@ service cloud.firestore {
     // Notifications: Users can only access their own notifications
     match /notifications/{notificationId} {
       allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+        request.auth.uid == resource.data.recipientId;
+      allow create: if request.auth != null;
     }
     
     // Admin-only collections

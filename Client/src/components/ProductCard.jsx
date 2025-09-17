@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
 import { Heart, ShoppingCart, Star, Eye, Share2 } from 'lucide-react'
+import { useCart } from '../context/CartContext'
+import DetailModal from './DetailModal'
 
-const ProductCard = ({ product, onCreatorClick }) => {
+const ProductCard = ({ product, onCreatorClick, onAddToCart, onToggleFavorite }) => {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   
   const {
     id,
@@ -22,17 +25,23 @@ const ProductCard = ({ product, onCreatorClick }) => {
 
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0
 
+  const { addToCart } = useCart()
   const handleAddToCart = () => {
-    console.log('Added to cart:', id)
-    // Integration with cart context or API here
+    try {
+      addToCart(product)
+      onAddToCart?.(product)
+    } catch (e) {
+      console.error('Add to cart failed', e)
+    }
   }
 
   const handleToggleWishlist = () => {
     setIsWishlisted(!isWishlisted)
+    onToggleFavorite?.(id)
   }
 
   const handleQuickView = () => {
-    console.log('Quick view:', id)
+    setShowDetailModal(true)
   }
 
   const handleShare = () => {
@@ -46,7 +55,8 @@ const ProductCard = ({ product, onCreatorClick }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group relative">
+    <>
+      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group relative cursor-pointer" onClick={handleQuickView}>
       {/* Product Image */}
       <div className="relative overflow-hidden">
         <img
@@ -59,10 +69,22 @@ const ProductCard = ({ product, onCreatorClick }) => {
         {/* Overlay actions */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
           <div className="flex space-x-2">
-            <button onClick={handleQuickView} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation()
+                handleQuickView()
+              }} 
+              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+            >
               <Eye size={16} className="text-gray-700" />
             </button>
-            <button onClick={handleShare} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation()
+                handleShare()
+              }} 
+              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+            >
               <Share2 size={16} className="text-gray-700" />
             </button>
           </div>
@@ -93,7 +115,10 @@ const ProductCard = ({ product, onCreatorClick }) => {
         {/* Wishlist button */}
         <div className="absolute top-2 right-2">
           <button 
-            onClick={handleToggleWishlist}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleToggleWishlist()
+            }}
             className={`p-2 rounded-full shadow-md transition-colors ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'}`}
           >
             <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} />
@@ -113,9 +138,8 @@ const ProductCard = ({ product, onCreatorClick }) => {
       {/* Product Info */}
       <div className="p-4">
         <h3 
-          className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-purple-600 cursor-pointer transition-colors" 
-          onClick={() => onCreatorClick(creator)}
-          title={`View Products by ${creator.name}`}
+          className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-purple-600 transition-colors" 
+          title={title}
         >
           {title}
         </h3>
@@ -139,7 +163,10 @@ const ProductCard = ({ product, onCreatorClick }) => {
 
         {/* Creator */}
         <button
-          onClick={() => onCreatorClick(creator)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onCreatorClick(creator)
+          }}
           className="text-sm text-gray-600 hover:text-purple-600 transition-colors mb-3 flex items-center space-x-1"
         >
           <div className="w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full"></div>
@@ -156,7 +183,10 @@ const ProductCard = ({ product, onCreatorClick }) => {
             )}
           </div>
           <button 
-            onClick={handleAddToCart}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAddToCart()
+            }}
             disabled={!inStock}
             className={`p-2 rounded-lg transition-colors ${inStock ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
           >
@@ -165,6 +195,16 @@ const ProductCard = ({ product, onCreatorClick }) => {
         </div>
       </div>
     </div>
+
+    {/* Detail Modal */}
+    <DetailModal
+      item={product}
+      isOpen={showDetailModal}
+      onClose={() => setShowDetailModal(false)}
+      type="product"
+      onCreatorClick={onCreatorClick}
+    />
+    </>
   )
 }
 

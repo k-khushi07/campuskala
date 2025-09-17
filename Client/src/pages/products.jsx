@@ -1,6 +1,7 @@
-//import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List, Star, Heart, ShoppingCart, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
+import { useRealtimeProducts } from '../hooks/useRealtime'
 
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -29,106 +30,7 @@ const Products = () => {
     { value: 'rating', label: 'Highest Rated' },
   ]
 
-  // Expanded sample products
-  const products = [
-    {
-      id: 1,
-      title: 'Hand-painted Canvas Art',
-      price: 1200,
-      originalPrice: 1500,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-      images: ['https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400'],
-      creator: { id: 1, name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100' },
-      rating: 4.8,
-      reviewCount: 24,
-      category: 'art',
-      tags: ['canvas', 'painting', 'abstract'],
-      description: 'Beautiful hand-painted abstract canvas art perfect for modern homes.',
-      inStock: true,
-      discount: 20,
-      isFavorite: false,
-      isNew: true
-    },
-    {
-      id: 2,
-      title: 'Custom T-shirt Design',
-      price: 450,
-      image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
-      creator: { id: 2, name: 'Raj Patel', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
-      rating: 4.6,
-      reviewCount: 18,
-      category: 'fashion',
-      tags: ['t-shirt', 'custom', 'print'],
-      description: 'Personalized t-shirt designs with high-quality printing.',
-      inStock: true,
-      isFavorite: true,
-      isNew: false
-    },
-    {
-      id: 3,
-      title: 'Handmade Jewelry Set',
-      price: 800,
-      originalPrice: 950,
-      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400',
-      creator: { id: 3, name: 'Anita Kumar', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100' },
-      rating: 4.9,
-      reviewCount: 32,
-      category: 'jewelry',
-      tags: ['handmade', 'silver', 'earrings'],
-      description: 'Elegant handcrafted silver jewelry set including necklace and earrings.',
-      inStock: true,
-      discount: 16,
-      isFavorite: false,
-      isNew: false
-    },
-    {
-      id: 4,
-      title: 'Digital Portrait Art',
-      price: 600,
-      image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400',
-      creator: { id: 4, name: 'Vikash Singh', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
-      rating: 4.7,
-      reviewCount: 15,
-      category: 'art',
-      tags: ['digital', 'portrait', 'custom'],
-      description: 'Professional digital portrait artwork from your photos.',
-      inStock: true,
-      isFavorite: false,
-      isNew: true
-    },
-    {
-      id: 5,
-      title: 'Ceramic Coffee Mug',
-      price: 350,
-      image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcf93a?w=400',
-      creator: { id: 5, name: 'Sonal Dave', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
-      rating: 4.5,
-      reviewCount: 12,
-      category: 'home',
-      tags: ['ceramic', 'mug', 'handmade'],
-      description: 'Beautiful ceramic coffee mug with unique glazing patterns.',
-      inStock: true,
-      isFavorite: true,
-      isNew: false
-    },
-    {
-      id: 6,
-      title: 'Laptop Stickers Pack',
-      price: 200,
-      originalPrice: 250,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
-      creator: { id: 6, name: 'Karan Joshi', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
-      rating: 4.4,
-      reviewCount: 8,
-      category: 'tech',
-      tags: ['stickers', 'laptop', 'pack'],
-      description: 'Premium quality laptop stickers pack with 20 unique designs.',
-      inStock: false,
-      discount: 20,
-      isFavorite: false,
-      isNew: false
-    }
-  ]
+  const { products, loading } = useRealtimeProducts()
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -308,7 +210,9 @@ const Products = () => {
             </div>
 
             {/* Products Grid/List */}
-            {sortedProducts.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">Loading...</div>
+            ) : sortedProducts.length > 0 ? (
               <div className={
                 viewMode === 'grid'
                   ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6'

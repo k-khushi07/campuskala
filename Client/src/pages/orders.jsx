@@ -1,3 +1,5 @@
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import OrderManagement from '../components/OrderManagement'
@@ -6,6 +8,19 @@ import { Package, ShoppingBag } from 'lucide-react'
 const Orders = () => {
   const { currentUser } = useAuth()
   const [activeTab, setActiveTab] = useState('buyer') // 'buyer' or 'seller'
+=======
+=======
+>>>>>>> Stashed changes
+import React from 'react'
+import { useAuth } from '../context/AuthContext'
+import OrderManagement from '../components/OrderManagement'
+
+const Orders = () => {
+  const { currentUser } = useAuth()
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
   if (!currentUser) {
     return (
@@ -21,6 +36,8 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         {/* Header with Tabs */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Orders</h1>
@@ -54,10 +71,22 @@ const Orders = () => {
 
         {/* Content */}
         <OrderManagement userType={activeTab} />
+=======
+        <OrderManagement />
+>>>>>>> Stashed changes
+=======
+        <OrderManagement />
+>>>>>>> Stashed changes
       </div>
     </div>
   )
 }
 
 export default Orders
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes

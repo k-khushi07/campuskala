@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { 
   User, 
   Mail, 
@@ -21,8 +22,11 @@ import {
   CreditCard,
   LogOut
 } from 'lucide-react'
+// removed theme context
 
 const Profile = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
@@ -541,6 +545,24 @@ const Profile = () => {
     </div>
   )
 
+  // Sync tab with URL (?tab=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const tabParam = params.get('tab')
+    if (tabParam && ['overview', 'orders', 'wishlist', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [location.search])
+
+  // Keep URL updated when tab changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('tab') !== activeTab) {
+      params.set('tab', activeTab)
+      navigate({ pathname: '/profile', search: params.toString() }, { replace: true })
+    }
+  }, [activeTab])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Cover Image & Avatar */}
@@ -587,7 +609,7 @@ const Profile = () => {
             </div>
             
             <div className="flex justify-center lg:justify-end pb-6">
-              <button className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button onClick={() => setActiveTab('settings')} className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <Settings size={16} />
                 Account Settings
               </button>
