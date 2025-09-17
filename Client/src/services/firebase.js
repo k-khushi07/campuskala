@@ -1,10 +1,10 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getFunctions } from 'firebase/functions'
-import { getMessaging, onMessage } from 'firebase/messaging'
+import { getMessaging } from 'firebase/messaging'
 
-// Your Firebase config (the one you just copied from Firebase Console)
+// Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDvEaxuzbuHH_10zlwxk_aHpJO0PnysWTE",
   authDomain: "campus-kala-e1240.firebaseapp.com",
@@ -22,6 +22,14 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const functions = getFunctions(app)
+
+// Configure Google Auth Provider
+export const provider = new GoogleAuthProvider()
+provider.addScope('email')
+provider.addScope('profile')
+
+// ❌ REMOVED: Don't set custom parameters globally
+// Let AuthContext handle this dynamically for better control
 
 // Initialize messaging for notifications (optional)
 let messaging = null
@@ -47,13 +55,17 @@ export const getFirebaseErrorMessage = (errorCode) => {
     'auth/email-already-in-use': 'An account with this email already exists.',
     'auth/weak-password': 'Password is too weak. Please use at least 6 characters.',
     'auth/operation-not-allowed': 'Email/password accounts are not enabled.',
+    'auth/popup-blocked': 'Popup was blocked. Please allow popups and try again.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed before completion.',
+    'auth/cancelled-popup-request': 'Another sign-in popup is already open.',
+    'auth/unauthorized-domain': 'This domain is not authorized for OAuth operations.',
     'permission-denied': 'You do not have permission to perform this action.',
     'not-found': 'The requested resource was not found.',
     'already-exists': 'The resource already exists.',
     'failed-precondition': 'Operation failed due to a precondition.',
     'unavailable': 'Service is currently unavailable. Please try again later.',
   }
-  
+     
   return errorMessages[errorCode] || 'An unexpected error occurred. Please try again.'
 }
 
@@ -63,8 +75,6 @@ export const logEvent = (eventName, parameters = {}) => {
     window.gtag('event', eventName, parameters)
   }
 }
-
-
 
 // Export the initialized app
 export default app

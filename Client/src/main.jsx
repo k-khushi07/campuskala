@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
+import { AuthProvider } from './context/AuthContext'
 
 // Error boundary for production
 class ErrorBoundary extends React.Component {
@@ -29,8 +30,8 @@ class ErrorBoundary extends React.Component {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h2>
             <p className="text-gray-600 mb-4">Please refresh the page and try again.</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >
               Refresh Page
@@ -47,9 +48,11 @@ class ErrorBoundary extends React.Component {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>
 )

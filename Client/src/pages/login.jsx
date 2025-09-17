@@ -11,9 +11,10 @@ const Login = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -25,7 +26,7 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
-    if (error) setError('') // Clear error when user types
+    if (error) setError('')
   }
 
   const handleSubmit = async (e) => {
@@ -41,6 +42,53 @@ const Login = () => {
       setError(getErrorMessage(error.code))
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true)
+    setError('')
+    
+    try {
+      const result = await loginWithGoogle()
+      
+      // If result is null, it means we're using redirect flow
+      // The redirect will handle navigation automatically
+      if (result) {
+        navigate(from, { replace: true })
+      }
+      // If using redirect, don't navigate here as the page will reload
+      
+    } catch (error) {
+      console.error('Google login error:', error)
+      const code = error?.code || 'unknown'
+      
+      let message = 'Google login failed. Please try again.'
+      switch (code) {
+        case 'auth/popup-blocked':
+          message = 'Popup was blocked. Please allow popups and try again, or we\'ll redirect you to Google.'
+          break
+        case 'auth/popup-closed-by-user':
+          message = 'Sign-in was cancelled. Please try again.'
+          break
+        case 'auth/cancelled-popup-request':
+          message = 'Another sign-in attempt is already in progress.'
+          break
+        case 'auth/operation-not-allowed':
+          message = 'Google sign-in is not enabled. Please contact support.'
+          break
+        case 'auth/unauthorized-domain':
+          message = 'This domain is not authorized. Please contact support.'
+          break
+        case 'auth/invalid-credential':
+          message = 'Invalid credential. Please try again.'
+          break
+        default:
+          message = `Google login failed (${code}). Please try again.`
+      }
+      setError(message)
+    } finally {
+      setGoogleLoading(false)
     }
   }
 
@@ -66,6 +114,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-6">
@@ -76,12 +125,8 @@ const Login = () => {
               CampusKala
             </h1>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            Welcome back!
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your CampusKala account
-          </p>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome back!</h2>
+          <p className="mt-2 text-sm text-gray-600">Sign in to your CampusKala account</p>
         </div>
 
         {/* Login Form */}
@@ -191,8 +236,31 @@ const Login = () => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or</span>
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
+            </div>
+
+            {/* Google Login Button */}
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+                className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {googleLoading ? (
+                  'Signing in with Google...'
+                ) : (
+                  <>
+                    <img
+                      src="https://www.svgrepo.com/show/355037/google.svg"
+                      alt="Google logo"
+                      className="w-5 h-5 mr-2"
+                    />
+                    Continue with Google
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Sign Up Link */}
