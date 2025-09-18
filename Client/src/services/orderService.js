@@ -31,10 +31,16 @@ class OrderService {
       
       // Create notification for service provider (only if seller is specified)
       if (orderData.sellerId) {
-        await notificationService.notifyOrderCreated({
-          id: orderId,
-          ...orderData
-        })
+        console.log('🔔 Creating notification for seller:', orderData.sellerId, 'Order ID:', orderId)
+        try {
+          await notificationService.notifyOrderCreated({
+            id: orderId,
+            ...orderData
+          })
+          console.log('✅ Notification created successfully for seller:', orderData.sellerId)
+        } catch (error) {
+          console.error('❌ Error creating notification:', error)
+        }
       }
       
       return { id: orderId, ...order }
@@ -129,6 +135,68 @@ class OrderService {
       return true
     } catch (error) {
       console.error('Error rejecting order:', error)
+      throw error
+    }
+  }
+
+  // Mark order as shipped
+  async shipOrder(orderId, sellerId, trackingInfo = {}) {
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        status: 'shipped',
+        shippedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        trackingInfo: {
+          trackingNumber: trackingInfo.trackingNumber || '',
+          carrier: trackingInfo.carrier || '',
+          estimatedDelivery: trackingInfo.estimatedDelivery || '',
+          ...trackingInfo
+        }
+      })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
+      
+      if (orderData) {
+        // Notify buyer about shipment
+        await notificationService.notifyOrderShipped({
+          id: orderId,
+          ...orderData
+        })
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error shipping order:', error)
+      throw error
+    }
+  }
+
+  // Mark order as delivered
+  async deliverOrder(orderId, sellerId) {
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        status: 'delivered',
+        deliveredAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      })
+
+      // Get order data for notification
+      const orderDoc = await getDocs(query(collection(db, 'orders'), where('__name__', '==', orderId)))
+      const orderData = orderDoc.docs[0]?.data()
+      
+      if (orderData) {
+        // Notify buyer about delivery
+        await notificationService.notifyOrderDelivered({
+          id: orderId,
+          ...orderData
+        })
+      }
+      
+      return true
+    } catch (error) {
+      console.error('Error delivering order:', error)
       throw error
     }
   }

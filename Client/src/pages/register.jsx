@@ -29,9 +29,22 @@ const Register = () => {
       [name]: type === 'checkbox' ? checked : value
     }))
     if (error) setError('') // Clear error when user types
+    
+    // Real-time email validation
+    if (name === 'email' && value && !value.endsWith('@christuniversity.in')) {
+      setError('Only Christ University email addresses (@christuniversity.in) are allowed.')
+    } else if (name === 'email' && value && value.endsWith('@christuniversity.in')) {
+      setError('') // Clear error if valid email is entered
+    }
   }
 
   const validateForm = () => {
+    // Check email domain
+    if (!formData.email.endsWith('@christuniversity.in')) {
+      setError('Only Christ University email addresses (@christuniversity.in) are allowed for registration.')
+      return false
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match!')
       return false
@@ -83,6 +96,8 @@ const Register = () => {
         return 'An account with this email already exists.'
       case 'auth/invalid-email':
         return 'Please enter a valid email address.'
+      case 'auth/invalid-email-domain':
+        return 'Only Christ University email addresses (@christuniversity.in) are allowed for registration.'
       case 'auth/weak-password':
         return 'Password is too weak. Please use at least 6 characters.'
       case 'auth/operation-not-allowed':
@@ -128,7 +143,7 @@ const Register = () => {
             Join CampusKala
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Create your account and start exploring campus creativity
+            For Christ University students - Create your account and start exploring campus creativity
           </p>
         </div>
 
@@ -168,11 +183,11 @@ const Register = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                Christ University Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className={`h-5 w-5 ${formData.email.endsWith('@christuniversity.in') ? 'text-green-500' : 'text-gray-400'}`} />
                 </div>
                 <input
                   id="email"
@@ -181,10 +196,22 @@ const Register = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Enter your college email"
+                  className={`appearance-none relative block w-full pl-10 pr-10 py-3 border placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 ${
+                    formData.email.endsWith('@christuniversity.in') && formData.email
+                      ? 'border-green-300 focus:ring-green-500 focus:border-green-500 bg-green-50'
+                      : 'border-gray-300 focus:ring-purple-500 focus:border-purple-500'
+                  }`}
+                  placeholder="username@christuniversity.in"
                 />
+                {formData.email.endsWith('@christuniversity.in') && formData.email && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  </div>
+                )}
               </div>
+              <p className="mt-1 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                <strong>Note:</strong> Only Christ University email addresses (@christuniversity.in) are accepted for registration.
+              </p>
             </div>
 
             {/* Phone Field */}

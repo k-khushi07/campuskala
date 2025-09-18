@@ -2,23 +2,10 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getFunctions } from 'firebase/functions'
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { getMessaging } from 'firebase/messaging'
-
-// Your Firebase config
-=======
 import { getMessaging, onMessage } from 'firebase/messaging'
 import { getStorage } from 'firebase/storage'
 
 // Firebase config from environment variables
->>>>>>> Stashed changes
-=======
-import { getMessaging, onMessage } from 'firebase/messaging'
-import { getStorage } from 'firebase/storage'
-
-// Firebase config from environment variables
->>>>>>> Stashed changes
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDvEaxuzbuHH_10zlwxk_aHpJO0PnysWTE",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "campus-kala-e1240.firebaseapp.com",
@@ -37,17 +24,11 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const functions = getFunctions(app)
 export const storage = getStorage(app)
-<<<<<<< Updated upstream
 
 // Configure Google Auth Provider
 export const provider = new GoogleAuthProvider()
 provider.addScope('email')
 provider.addScope('profile')
-
-// ❌ REMOVED: Don't set custom parameters globally
-// Let AuthContext handle this dynamically for better control
-=======
->>>>>>> Stashed changes
 
 // Initialize messaging for notifications (optional)
 let messaging = null

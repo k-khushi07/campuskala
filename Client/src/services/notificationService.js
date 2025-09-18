@@ -7,66 +7,35 @@ import {
   onSnapshot, 
   updateDoc, 
   doc,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   serverTimestamp,
   getDocs
-=======
-  serverTimestamp 
->>>>>>> Stashed changes
-=======
-  serverTimestamp 
->>>>>>> Stashed changes
 } from 'firebase/firestore'
 import { db } from './firebase'
 
 class NotificationService {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  // Create a notification
-=======
   // Create a new notification
->>>>>>> Stashed changes
-=======
-  // Create a new notification
->>>>>>> Stashed changes
   async createNotification(notificationData) {
     try {
+      console.log('🔔 createNotification called with:', notificationData)
+      
       const notification = {
         ...notificationData,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        read: false,
-        createdAt: serverTimestamp()
-=======
         createdAt: serverTimestamp(),
         read: false,
         type: notificationData.type || 'order'
->>>>>>> Stashed changes
-=======
-        createdAt: serverTimestamp(),
-        read: false,
-        type: notificationData.type || 'order'
->>>>>>> Stashed changes
       }
       
+      console.log('🔔 Final notification object:', notification)
       const docRef = await addDoc(collection(db, 'notifications'), notification)
+      console.log('✅ Notification saved to Firestore with ID:', docRef.id)
       return { id: docRef.id, ...notification }
     } catch (error) {
-      console.error('Error creating notification:', error)
+      console.error('❌ Error creating notification:', error)
       throw error
     }
   }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  // Get notifications for a user
-=======
   // Get notifications for a specific user
->>>>>>> Stashed changes
-=======
-  // Get notifications for a specific user
->>>>>>> Stashed changes
   async getUserNotifications(userId) {
     try {
       const q = query(
@@ -74,18 +43,9 @@ class NotificationService {
         where('recipientId', '==', userId),
         orderBy('createdAt', 'desc')
       )
-      
       return q
     } catch (error) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      console.error('Error fetching user notifications:', error)
-=======
       console.error('Error fetching notifications:', error)
->>>>>>> Stashed changes
-=======
-      console.error('Error fetching notifications:', error)
->>>>>>> Stashed changes
       throw error
     }
   }
@@ -103,68 +63,55 @@ class NotificationService {
     }
   }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  // Notify order created
-=======
-=======
->>>>>>> Stashed changes
   // Mark all notifications as read for a user
   async markAllAsRead(userId) {
     try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('recipientId', '==', userId),
-        where('read', '==', false)
-      )
+      const notificationsQuery = await this.getUserNotifications(userId)
+      const snapshot = await getDocs(notificationsQuery)
       
-      // This would need to be implemented with batch updates
-      // For now, we'll handle this in the component
+      const updatePromises = snapshot.docs
+        .filter(doc => !doc.data().read)
+        .map(doc => this.markAsRead(doc.id))
+      
+      await Promise.all(updatePromises)
     } catch (error) {
-      console.error('Error marking all as read:', error)
+      console.error('Error marking all notifications as read:', error)
       throw error
     }
   }
 
   // Create order notification for service provider
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   async notifyOrderCreated(orderData) {
     try {
+      console.log('🔔 notifyOrderCreated called with data:', orderData)
+      
+      // Get the first item title or use a default
+      const itemTitle = orderData.items && orderData.items.length > 0 
+        ? orderData.items[0].name || orderData.items[0].title || 'Order Item'
+        : orderData.itemTitle || 'Order Item'
+
       const notification = {
         type: 'order_created',
         title: 'New Order Received',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        message: `You have received a new order from ${orderData.buyerName}`,
-=======
-        message: `You have received a new ${orderData.type} order from ${orderData.buyerName}`,
->>>>>>> Stashed changes
-=======
-        message: `You have received a new ${orderData.type} order from ${orderData.buyerName}`,
->>>>>>> Stashed changes
+        message: `You have received a new ${orderData.type || 'product'} order from ${orderData.buyerName || 'Customer'}`,
         recipientId: orderData.sellerId,
         orderId: orderData.id,
         data: {
           orderId: orderData.id,
-          buyerName: orderData.buyerName,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-          itemTitle: orderData.itemTitle,
-          itemType: orderData.type,
-          totalAmount: orderData.totalAmount,
-          quantity: orderData.quantity
+          buyerName: orderData.buyerName || 'Customer',
+          itemTitle: itemTitle,
+          itemType: orderData.type || 'product',
+          totalAmount: orderData.totalAmount || 0,
+          quantity: orderData.items?.length || 1
         }
       }
       
-      return await this.createNotification(notification)
+      console.log('🔔 Creating notification:', notification)
+      const result = await this.createNotification(notification)
+      console.log('✅ Notification created successfully:', result)
+      return result
     } catch (error) {
-      console.error('Error creating order notification:', error)
+      console.error('❌ Error creating order notification:', error)
       throw error
     }
   }
@@ -183,49 +130,17 @@ class NotificationService {
           sellerName: orderData.sellerName,
           itemTitle: orderData.itemTitle,
           itemType: orderData.type,
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
           totalAmount: orderData.totalAmount
         }
       }
       
       return await this.createNotification(notification)
     } catch (error) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      console.error('Error notifying order created:', error)
-=======
       console.error('Error creating approval notification:', error)
->>>>>>> Stashed changes
-=======
-      console.error('Error creating approval notification:', error)
->>>>>>> Stashed changes
       throw error
     }
   }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  // Notify order status update
-  async notifyOrderStatusUpdate(orderData, newStatus) {
-    try {
-      const statusMessages = {
-        'approved': 'Your order has been approved',
-        'rejected': 'Your order has been rejected',
-        'completed': 'Your order has been completed',
-        'shipped': 'Your order has been shipped',
-        'delivered': 'Your order has been delivered'
-      }
-
-      const notification = {
-        type: 'order_status_update',
-        title: 'Order Status Update',
-        message: statusMessages[newStatus] || `Your order status has been updated to ${newStatus}`,
-=======
-=======
->>>>>>> Stashed changes
   // Create rejection notification for buyer
   async notifyOrderRejected(orderData, reason) {
     try {
@@ -233,67 +148,25 @@ class NotificationService {
         type: 'order_rejected',
         title: 'Order Rejected',
         message: `Your ${orderData.type} order was rejected by ${orderData.sellerName}. Reason: ${reason}`,
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         recipientId: orderData.buyerId,
         orderId: orderData.id,
         data: {
           orderId: orderData.id,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-          newStatus,
-          sellerName: orderData.sellerName
-=======
-=======
->>>>>>> Stashed changes
           sellerName: orderData.sellerName,
           itemTitle: orderData.itemTitle,
           itemType: orderData.type,
           totalAmount: orderData.totalAmount,
           rejectionReason: reason
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         }
       }
       
       return await this.createNotification(notification)
     } catch (error) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      console.error('Error notifying order status update:', error)
-=======
       console.error('Error creating rejection notification:', error)
->>>>>>> Stashed changes
-=======
-      console.error('Error creating rejection notification:', error)
->>>>>>> Stashed changes
       throw error
     }
   }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  // Notify proposal received
-  async notifyProposalReceived(proposalData) {
-    try {
-      const notification = {
-        type: 'proposal_received',
-        title: 'New Proposal Received',
-        message: `You have received a new proposal for your custom order`,
-        recipientId: proposalData.buyerId,
-        orderId: proposalData.orderId,
-        data: {
-          orderId: proposalData.orderId,
-          proposalId: proposalData.id,
-          sellerName: proposalData.sellerName,
-          proposedPrice: proposalData.proposedPrice
-=======
-=======
->>>>>>> Stashed changes
   // Create order completion notification
   async notifyOrderCompleted(orderData) {
     try {
@@ -309,57 +182,66 @@ class NotificationService {
           itemTitle: orderData.itemTitle,
           itemType: orderData.type,
           totalAmount: orderData.totalAmount
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         }
       }
       
       return await this.createNotification(notification)
     } catch (error) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      console.error('Error notifying proposal received:', error)
+      console.error('Error creating completion notification:', error)
       throw error
     }
   }
 
-  // Notify proposal accepted
-  async notifyProposalAccepted(proposalData) {
+  // Create shipment notification for buyer
+  async notifyOrderShipped(orderData) {
     try {
       const notification = {
-        type: 'proposal_accepted',
-        title: 'Proposal Accepted',
-        message: `Your proposal has been accepted for the custom order`,
-        recipientId: proposalData.sellerId,
-        orderId: proposalData.orderId,
+        type: 'order_shipped',
+        title: 'Order Shipped!',
+        message: `Your ${orderData.type} order has been shipped by ${orderData.sellerName}`,
+        recipientId: orderData.buyerId,
+        orderId: orderData.id,
         data: {
-          orderId: proposalData.orderId,
-          proposalId: proposalData.id,
-          buyerName: proposalData.buyerName
+          orderId: orderData.id,
+          sellerName: orderData.sellerName,
+          itemTitle: orderData.itemTitle,
+          itemType: orderData.type,
+          totalAmount: orderData.totalAmount,
+          trackingInfo: orderData.trackingInfo
         }
       }
       
       return await this.createNotification(notification)
     } catch (error) {
-      console.error('Error notifying proposal accepted:', error)
-=======
-      console.error('Error creating completion notification:', error)
->>>>>>> Stashed changes
-=======
-      console.error('Error creating completion notification:', error)
->>>>>>> Stashed changes
+      console.error('Error creating shipment notification:', error)
+      throw error
+    }
+  }
+
+  // Create delivery notification for buyer
+  async notifyOrderDelivered(orderData) {
+    try {
+      const notification = {
+        type: 'order_delivered',
+        title: 'Order Delivered!',
+        message: `Your ${orderData.type} order has been delivered by ${orderData.sellerName}`,
+        recipientId: orderData.buyerId,
+        orderId: orderData.id,
+        data: {
+          orderId: orderData.id,
+          sellerName: orderData.sellerName,
+          itemTitle: orderData.itemTitle,
+          itemType: orderData.type,
+          totalAmount: orderData.totalAmount
+        }
+      }
+      
+      return await this.createNotification(notification)
+    } catch (error) {
+      console.error('Error creating delivery notification:', error)
       throw error
     }
   }
 }
 
 export default new NotificationService()
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes

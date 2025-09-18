@@ -22,8 +22,13 @@ const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    if (!currentUser) return
+    if (!currentUser) {
+      console.log('🔔 NotificationCenter: No current user, skipping notification setup')
+      return
+    }
 
+    console.log('🔔 NotificationCenter: Setting up notifications for user:', currentUser.uid)
+    
     // Listen to notifications in real-time
     const q = query(
       collection(db, 'notifications'),
@@ -32,13 +37,17 @@ const NotificationCenter = () => {
     )
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('🔔 NotificationCenter: Received snapshot with', snapshot.docs.length, 'notifications')
       const notificationsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
       
+      console.log('🔔 NotificationCenter: Processed notifications:', notificationsData)
       setNotifications(notificationsData)
       setUnreadCount(notificationsData.filter(n => !n.read).length)
+    }, (error) => {
+      console.error('🔔 NotificationCenter: Error listening to notifications:', error)
     })
 
     return () => unsubscribe()

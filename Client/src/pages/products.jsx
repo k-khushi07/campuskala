@@ -1,9 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List, Star, Heart, ShoppingCart, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { useRealtimeProducts } from '../hooks/useRealtime'
+import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 
 const Products = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [priceRange, setPriceRange] = useState([0, 5000])
@@ -31,11 +35,34 @@ const Products = () => {
   ]
 
   const { products, loading } = useRealtimeProducts()
+  const { addToWishlist } = useWishlist()
+  const { addToCart } = useCart()
+
+  // Handle URL search parameters
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get('search')
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+    }
+  }, [searchParams])
+
+  // Update URL when search query changes
+  const handleSearchChange = (e) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    
+    // Update URL parameters
+    if (value.trim()) {
+      setSearchParams({ search: value })
+    } else {
+      setSearchParams({})
+    }
+  }
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+                         (product.tags && product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
     const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
     return matchesSearch && matchesCategory && matchesPrice
@@ -57,13 +84,14 @@ const Products = () => {
   })
 
   const toggleFavorite = (productId) => {
-    // Handle favorite toggle
-    console.log('Toggle favorite:', productId)
+    const product = products.find(p => p.id === productId)
+    if (product) {
+      addToWishlist(product)
+    }
   }
 
-  const addToCart = (product) => {
-    // Handle add to cart
-    console.log('Add to cart:', product.id)
+  const handleAddToCart = (product) => {
+    addToCart(product)
   }
 
   const handleCreatorClick = (creator) => {
@@ -89,7 +117,7 @@ const Products = () => {
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -129,7 +157,7 @@ const Products = () => {
                   <input
                     type="range"
                     min="0"
-                    max="5000"
+                    max="50000"
                     step="100"
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
@@ -225,7 +253,7 @@ const Products = () => {
                     viewMode={viewMode}
                     onCreatorClick={handleCreatorClick}
                     onToggleFavorite={toggleFavorite}
-                    onAddToCart={addToCart}
+                    onAddToCart={handleAddToCart}
                   />
                 ))}
               </div>
@@ -243,6 +271,7 @@ const Products = () => {
                     setSearchQuery('')
                     setSelectedCategory('all')
                     setPriceRange([0, 5000])
+                    setSearchParams({})
                   }}
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >

@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Heart, ShoppingCart, Star, Eye, Share2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
 import DetailModal from './DetailModal'
 
 const ProductCard = ({ product, onCreatorClick, onAddToCart, onToggleFavorite }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   
@@ -26,6 +26,10 @@ const ProductCard = ({ product, onCreatorClick, onAddToCart, onToggleFavorite })
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0
 
   const { addToCart } = useCart()
+  const { toggleWishlist, isInWishlist } = useWishlist()
+  
+  const isWishlisted = isInWishlist(id)
+
   const handleAddToCart = () => {
     try {
       addToCart(product)
@@ -36,7 +40,7 @@ const ProductCard = ({ product, onCreatorClick, onAddToCart, onToggleFavorite })
   }
 
   const handleToggleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
+    toggleWishlist(product)
     onToggleFavorite?.(id)
   }
 

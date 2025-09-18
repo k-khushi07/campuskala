@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth, provider } from "../services/firebase";
+import { auth, provider, db, getFirebaseErrorMessage, logEvent } from "../services/firebase";
 import {
   signInWithPopup,
   signInWithRedirect,
@@ -7,8 +7,19 @@ import {
   signOut,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  GoogleAuthProvider
 } from "firebase/auth";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot
+} from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -29,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         displayName: additionalData.name || user.displayName || '',
         phone: additionalData.phone || '',
         userType: additionalData.userType || 'buyer', // buyer, seller, freelancer, both
-        role: 'user', // user, admin, moderator
+        role: 'users', // user, admin, moderator
         
         // Profile info
         avatar: user.photoURL || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
@@ -125,6 +136,11 @@ export const AuthProvider = ({ children }) => {
     setAuthLoading(true)
     try {
       console.log('Starting registration process...')
+      
+      // Validate email domain
+      if (!formData.email.endsWith('@christuniversity.in')) {
+        throw new Error('auth/invalid-email-domain')
+      }
       
       const { user } = await createUserWithEmailAndPassword(
         auth, 
@@ -326,7 +342,7 @@ export const AuthProvider = ({ children }) => {
                 uid: user.uid,
                 email: user.email || '',
                 displayName: user.displayName || '',
-                role: 'user',
+                role: 'users',
                 userType: 'buyer',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -377,12 +393,17 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const value = {
-    user,
+    currentUser,
+    userProfile,
     login,
-    register,
-    loginWithGoogle,
+    signup,
+    signInWithGoogle,
     logout,
-    loading
+    resetPassword,
+    updateUserProfile,
+    getUserProfile,
+    loading,
+    authLoading
   };
 
   return (

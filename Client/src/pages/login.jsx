@@ -14,7 +14,7 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { login, loginWithGoogle } = useAuth()
+  const { login, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -50,7 +50,7 @@ const Login = () => {
     setError('')
     
     try {
-      const result = await loginWithGoogle()
+      const result = await signInWithGoogle()
       
       // If result is null, it means we're using redirect flow
       // The redirect will handle navigation automatically

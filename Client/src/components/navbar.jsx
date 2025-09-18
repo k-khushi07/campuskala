@@ -28,9 +28,14 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+    const trimmedQuery = searchQuery.trim()
+    if (trimmedQuery) {
+      console.log('Searching for:', trimmedQuery) // Debug log
+      navigate(`/products?search=${encodeURIComponent(trimmedQuery)}`)
       setSearchQuery('')
+    } else {
+      console.log('Empty search query, navigating to products page')
+      navigate('/products')
     }
   }
 
@@ -60,8 +65,20 @@ const Navbar = () => {
                   placeholder="Search products, services..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch(e)
+                    }
+                  }}
+                  className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-purple-600 hover:text-purple-700 transition-colors"
+                  title="Search"
+                >
+                  <Search size={18} />
+                </button>
               </div>
             </form>
           </div>
@@ -84,14 +101,6 @@ const Navbar = () => {
             >
               Services
             </Link>
-            <Link
-              to="/custom-order"
-              className={`text-sm font-medium transition-colors ${
-                isActive('/custom-order') ? 'text-purple-600' : 'text-gray-700 hover:text-purple-600'
-              }`}
-            >
-              Custom Order
-            </Link>
             {currentUser && (
               <Link
                 to="/sell"
@@ -103,20 +112,20 @@ const Navbar = () => {
               </Link>
             )}
 
+            {/* Cart Icon with count - visible for all users */}
+            <Link to="/cart" className="relative">
+              <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-purple-600 transition-colors" />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
             {currentUser ? (
               <>
                 {/* Notifications */}
                 <NotificationCenter />
-
-                {/* Cart Icon with count */}
-                <Link to="/cart" className="relative">
-                  <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-purple-600 transition-colors" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
 
                 {/* User Menu */}
                 <div className="relative">
@@ -143,15 +152,23 @@ const Navbar = () => {
                         Profile
                       </Link>
                       <Link
+                        to="/my-orders"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Package className="mr-3" size={16} />
+                        My Orders
+                      </Link>
+                      <Link
                         to="/orders"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Package className="mr-3" size={16} />
-                        Orders
+                        Manage Orders (Seller)
                       </Link>
                       <Link
-                        to="/profile"
+                        to="/wishlist"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -219,8 +236,20 @@ const Navbar = () => {
                   placeholder="Search products, services..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch(e)
+                    }
+                  }}
+                  className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-purple-600 hover:text-purple-700 transition-colors"
+                  title="Search"
+                >
+                  <Search size={18} />
+                </button>
               </div>
             </form>
 
@@ -244,25 +273,26 @@ const Navbar = () => {
               >
                 Services
               </Link>
+
+              {/* Cart - visible for all users */}
               <Link
-                to="/custom-order"
-                className={`block text-base font-medium ${
-                  isActive('/custom-order') ? 'text-purple-600' : 'text-gray-700'
-                }`}
+                to="/cart"
+                className="flex items-center text-base font-medium text-gray-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Custom Order
+                <ShoppingCart className="mr-3" size={20} />
+                Cart{cartCount > 0 ? ` (${cartCount})` : ''}
               </Link>
 
               {currentUser ? (
                 <>
                   <Link
-                    to="/cart"
+                    to="/wishlist"
                     className="flex items-center text-base font-medium text-gray-700"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <ShoppingCart className="mr-3" size={20} />
-                    Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+                    <Heart className="mr-3" size={20} />
+                    Wishlist
                   </Link>
                   <Link
                     to="/profile"

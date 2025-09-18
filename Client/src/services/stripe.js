@@ -50,7 +50,7 @@ class StripeService {
             currency: 'inr',
             product_data: {
               name: item.name,
-              description: item.description,
+              description: item.description || '',
               images: item.images || []
             },
             unit_amount: Math.round(item.price * 100)

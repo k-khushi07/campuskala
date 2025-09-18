@@ -31,6 +31,7 @@ const sampleProducts = [
     rating: 4.8,
     reviewCount: 24,
     category: 'art',
+    tags: ['art', 'painting', 'handmade', 'canvas', 'creative'],
     inStock: true,
     isHandmade: true,
     isEcoFriendly: true,
@@ -52,6 +53,7 @@ const sampleProducts = [
     rating: 4.6,
     reviewCount: 18,
     category: 'fashion',
+    tags: ['fashion', 'tshirt', 'custom', 'design', 'clothing'],
     inStock: true,
     isHandmade: true,
     createdAt: new Date()
@@ -213,8 +215,7 @@ export const useRealtimeOrders = (userId, userType = 'buyer') => {
     const field = userType === 'seller' ? 'sellerId' : 'buyerId'
     const q = query(
       collection(db, 'orders'),
-      where(field, '==', userId),
-      orderBy('createdAt', 'desc')
+      where(field, '==', userId)
     )
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -222,6 +223,12 @@ export const useRealtimeOrders = (userId, userType = 'buyer') => {
         id: doc.id,
         ...doc.data()
       }))
+      // Sort by createdAt in descending order (newest first)
+      ordersData.sort((a, b) => {
+        const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt || 0)
+        const bTime = b.createdAt?.toDate?.() || new Date(b.createdAt || 0)
+        return bTime - aTime
+      })
       setOrders(ordersData)
       setLoading(false)
     })

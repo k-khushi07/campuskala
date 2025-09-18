@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useFirestore } from '../hooks/useRealtime'
 import { useAuth } from '../context/AuthContext'
 import ImageUpload from '../components/ImageUpload'
+import FeaturedCreatorModal from '../components/FeaturedCreatorModal'
+import { Star, Package, Briefcase, TrendingUp, Users } from 'lucide-react'
 
 const initialProduct = {
   title: '',
@@ -33,6 +35,7 @@ const Sell = () => {
   const [product, setProduct] = useState(initialProduct)
   const [service, setService] = useState(initialService)
   const [message, setMessage] = useState('')
+  const [showFeaturedCreatorModal, setShowFeaturedCreatorModal] = useState(false)
 
   const onChange = (setter) => (e) => {
     const { name, value, type, checked } = e.target
@@ -90,12 +93,70 @@ const Sell = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Sell on CampusKala</h1>
-        <p className="text-gray-600 mb-6">Add your products or services. They’ll show up on the marketplace.</p>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Sell on CampusKala</h1>
+          <p className="text-gray-600 mb-6">Add your products or services, or become a featured creator to get more visibility.</p>
+          
+          {/* Featured Creator CTA */}
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <Star className="mr-2" size={24} />
+              <h2 className="text-2xl font-bold">Become a Featured Creator</h2>
+            </div>
+            <p className="text-purple-100 mb-4">Get featured on our homepage and receive direct custom order requests via WhatsApp</p>
+            <button
+              onClick={() => setShowFeaturedCreatorModal(true)}
+              className="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Apply Now
+            </button>
+          </div>
+        </div>
+
         {message && (
-          <div className="mb-6 p-3 rounded border border-green-200 bg-green-50 text-green-800">{message}</div>
+          <div className="mb-6 p-4 rounded-lg border border-green-200 bg-green-50 text-green-800">{message}</div>
         )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Package className="text-blue-600 mr-3" size={24} />
+              <div>
+                <p className="text-sm text-gray-600">Products Listed</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Briefcase className="text-green-600 mr-3" size={24} />
+              <div>
+                <p className="text-sm text-gray-600">Services Listed</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <TrendingUp className="text-purple-600 mr-3" size={24} />
+              <div>
+                <p className="text-sm text-gray-600">Total Views</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Users className="text-orange-600 mr-3" size={24} />
+              <div>
+                <p className="text-sm text-gray-600">Featured Creator</p>
+                <p className="text-2xl font-bold text-gray-900">Pending</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Form */}
@@ -217,6 +278,12 @@ const Sell = () => {
           </form>
         </div>
       </div>
+
+      {/* Featured Creator Modal */}
+      <FeaturedCreatorModal
+        isOpen={showFeaturedCreatorModal}
+        onClose={() => setShowFeaturedCreatorModal(false)}
+      />
     </div>
   )
 }

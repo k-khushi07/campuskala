@@ -40,8 +40,7 @@ const Footer = () => {
                 { to: "/", label: "Home" },
                 { to: "/products", label: "Products" },
                 { to: "/services", label: "Services" },
-                { to: "/custom-order", label: "Custom Orders" },
-                { to: "/become-seller", label: "Become a Seller" }
+                { to: "/sell", label: "Become a Seller" }
               ].map(({ to, label }) => (
                 <li key={to}>
                   <Link to={to} className="text-gray-300 hover:text-purple-400 transition-colors">

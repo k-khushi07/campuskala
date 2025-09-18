@@ -4,6 +4,7 @@ import { useRealtimeServices } from '../hooks/useRealtime'
 import { useCart } from '../context/CartContext'
 import { Search, Filter, MapPin, Clock, Star, Calendar, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import ServiceCard from '../components/ServiceCard'
+import ServiceRecommendationChatbot from '../components/ServiceRecommendationChatbot'
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -14,6 +15,7 @@ const Services = () => {
   const [sortBy, setSortBy] = useState('popular')
   const navigate = useNavigate()
   const [showFilters, setShowFilters] = useState(false)
+  const [showChatbot, setShowChatbot] = useState(false)
 
   const categories = [
     { id: 'all', name: 'All Services' },
@@ -271,12 +273,11 @@ const Services = () => {
                     setSearchQuery('')
                     setSelectedCategory('all')
                     setLocation('all')
-                    setPriceRange([0, 3000])
+                    setPriceRange([0, 30000])
                   }}
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Clear all filters
-                  
                 </button>
               </div>
             )}
@@ -289,9 +290,9 @@ const Services = () => {
                     Need Help Finding the Right Service?
                   </h2>
                   <p className="text-gray-600 mb-6">
-                    Our team can help match you with the perfect service provider for your needs.
+                    Meet Nova, our AI assistant who can help match you with the perfect service provider for your needs.
                   </p>
-                  <button onClick={() => navigate('/custom-order')} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                  <button onClick={() => setShowChatbot(true)} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Get Personalized Recommendations
                   </button>
                 </div>
@@ -300,6 +301,13 @@ const Services = () => {
           </div>
         </div>
       </div>
+
+      {/* Service Recommendation Chatbot */}
+      <ServiceRecommendationChatbot
+        isOpen={showChatbot}
+        onClose={() => setShowChatbot(false)}
+        services={services}
+      />
     </div>
   )
 }

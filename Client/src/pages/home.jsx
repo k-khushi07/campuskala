@@ -1,15 +1,23 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Filter, ChevronRight, Palette, Shirt, Camera, Music, Code, BookOpen, Star } from 'lucide-react'
+import { Search, Filter, ChevronRight, Palette, Shirt, Camera, Music, Code, BookOpen, Star, MessageCircle, X } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import ServiceCard from '../components/ServiceCard'
+import CustomOrderModalSimple from '../components/CustomOrderModalSimple'
 import { useRealtimeProducts, useRealtimeServices } from '../hooks/useRealtime'
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import { db } from '../services/firebase'
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('products')
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [showCustomOrderModal, setShowCustomOrderModal] = useState(false)
+  const [selectedCreator, setSelectedCreator] = useState(null)
+  const [featuredCreators, setFeaturedCreators] = useState([])
+  const [loadingCreators, setLoadingCreators] = useState(true)
+  const [newCreatorNotification, setNewCreatorNotification] = useState(null)
 
   // Categories
   const categories = [
@@ -27,47 +35,219 @@ const Home = () => {
 
   const { services: sampleServices } = useRealtimeServices({ limit: 24 })
 
-  const featuredCreators = [
-    {
-      id: 1,
+  // Real-time listener for featured creators from Firebase
+  useEffect(() => {
+    setLoadingCreators(true)
+    
+    // Simple query without orderBy to avoid index requirement
+    const q = query(
+      collection(db, 'featured_creators'),
+      where('status', '==', 'approved'),
+      limit(6) // Increased limit to show more creators
+    )
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      try {
+        console.log('Featured creators query snapshot:', querySnapshot.docs.length, 'docs')
+        
+        const creators = querySnapshot.docs.map(doc => {
+          const data = doc.data()
+          console.log('Creator data:', doc.id, data)
+          return {
+            id: doc.id,
+            ...data
+          }
+        })
+        
+        // Sort by createdAt in descending order (newest first)
+        const sortedCreators = creators.sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0)
+          const bTime = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0)
+          return bTime - aTime
+        })
+        
+        console.log('Processed and sorted creators:', sortedCreators)
+        
+        // Check if this is a new creator (more creators than before)
+        const previousCount = featuredCreators.length
+        if (creators.length > previousCount && previousCount > 0) {
+          // New creator added - show notification
+          const newCreator = creators[0] // Most recent creator
+          setNewCreatorNotification({
+            message: `🎉 Welcome ${newCreator.name} as a new featured creator!`,
+            creator: newCreator
+          })
+          
+          // Auto-hide notification after 5 seconds
+          setTimeout(() => {
+            setNewCreatorNotification(null)
+          }, 5000)
+        }
+        
+        // If we have creators from Firebase, use them
+        if (sortedCreators.length > 0) {
+          console.log('Setting featured creators from Firebase:', sortedCreators)
+          setFeaturedCreators(sortedCreators)
+        } else {
+          // Fallback to sample data if no creators in database
+          setFeaturedCreators([
+            {
+              id: 'sample-1',
       name: 'Priya Sharma',
       avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100',
       specialty: 'Digital Art & Illustration',
       rating: 4.9,
-      orders: 156
+              orders: 156,
+              whatsapp: '919876543210',
+              portfolio: 'https://instagram.com/priyasharma_art',
+              isAvailable: true
     },
     {
-      id: 2,
+              id: 'sample-2',
       name: 'Raj Patel',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
       specialty: 'Fashion Design',
       rating: 4.8,
-      orders: 98
-    },
-    {
-      id: 3,
-      name: 'Anita Kumar',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-      specialty: 'Handmade Crafts',
+              orders: 98,
+              whatsapp: '919876543211',
+              portfolio: 'https://instagram.com/rajpatel_fashion',
+              isAvailable: true
+            }
+          ])
+        }
+      } catch (error) {
+        console.error('Error processing featured creators:', error)
+        // Keep existing creators on error
+      } finally {
+        setLoadingCreators(false)
+      }
+    }, (error) => {
+      console.error('Error listening to featured creators:', error)
+      setLoadingCreators(false)
+      
+      // Try a simpler query without orderBy
+      console.log('Trying fallback query...')
+      const fallbackQ = query(
+        collection(db, 'featured_creators'),
+        where('status', '==', 'approved'),
+        limit(6)
+      )
+      
+      onSnapshot(fallbackQ, (fallbackSnapshot) => {
+        console.log('Fallback query result:', fallbackSnapshot.docs.length, 'docs')
+        const fallbackCreators = fallbackSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        
+        if (fallbackCreators.length > 0) {
+          setFeaturedCreators(fallbackCreators)
+        } else {
+          // Final fallback to sample data
+          setFeaturedCreators([
+            {
+              id: 'sample-1',
+              name: 'Priya Sharma',
+              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100',
+              specialty: 'Digital Art & Illustration',
+              rating: 4.9,
+              orders: 156,
+              whatsapp: '919876543210',
+              portfolio: 'https://instagram.com/priyasharma_art',
+              isAvailable: true
+            },
+            {
+              id: 'sample-2',
+              name: 'Raj Patel',
+              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+              specialty: 'Fashion Design',
+              rating: 4.8,
+              orders: 98,
+              whatsapp: '919876543211',
+              portfolio: 'https://instagram.com/rajpatel_fashion',
+              isAvailable: true
+            }
+          ])
+        }
+      }, (fallbackError) => {
+        console.error('Fallback query also failed:', fallbackError)
+        // Final fallback to sample data
+        setFeaturedCreators([
+          {
+            id: 'sample-1',
+            name: 'Priya Sharma',
+            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b2d5bac8?w=100',
+            specialty: 'Digital Art & Illustration',
       rating: 4.9,
-      orders: 203
-    },
-    {
-      id: 4,
-      name: 'Aditi Mehta',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100',
-      specialty: 'Photography',
-      rating: 4.9,
-      orders: 87
-    }
-  ]
+            orders: 156,
+            whatsapp: '919876543210',
+            portfolio: 'https://instagram.com/priyasharma_art',
+            isAvailable: true
+          },
+          {
+            id: 'sample-2',
+            name: 'Raj Patel',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+            specialty: 'Fashion Design',
+            rating: 4.8,
+            orders: 98,
+            whatsapp: '919876543211',
+            portfolio: 'https://instagram.com/rajpatel_fashion',
+            isAvailable: true
+          }
+        ])
+      })
+    })
+
+    // Cleanup listener on component unmount
+    return () => unsubscribe()
+  }, [])
 
   const handleCreatorClick = (creator) => {
-    console.log('Navigate to creator:', creator.id)
+    setSelectedCreator(creator)
+    setShowCustomOrderModal(true)
   }
 
   const handleViewAll = () => {
-    navigate(activeTab === 'products' ? '/products' : '/services')
+    if (activeTab === 'products') {
+      navigate('/products')
+    } else if (activeTab === 'services') {
+      navigate('/services')
+    } else {
+      // For featured creators section
+      navigate('/featured-creators')
+    }
+  }
+
+  // Debug function to manually check Firebase data
+  const debugFirebaseData = async () => {
+    try {
+      console.log('=== DEBUGGING FIREBASE DATA ===')
+      
+      // Get all documents in featured_creators collection
+      const allDocs = await getDocs(collection(db, 'featured_creators'))
+      console.log('Total documents in featured_creators:', allDocs.docs.length)
+      
+      allDocs.docs.forEach((doc, index) => {
+        console.log(`Document ${index + 1}:`, doc.id, doc.data())
+      })
+      
+      // Test the exact query we're using
+      const testQuery = query(
+        collection(db, 'featured_creators'),
+        where('status', '==', 'approved'),
+        limit(6)
+      )
+      
+      const testSnapshot = await getDocs(testQuery)
+      console.log('Query result:', testSnapshot.docs.length, 'docs')
+      testSnapshot.docs.forEach((doc, index) => {
+        console.log(`Query result ${index + 1}:`, doc.id, doc.data())
+      })
+      
+    } catch (error) {
+      console.error('Debug error:', error)
+    }
   }
 
   const handleBecomeCreator = () => {
@@ -80,7 +260,7 @@ const Home = () => {
 
   const handleBookingClick = (service) => {
     console.log('Booking service:', service?.id)
-    navigate('/custom-order')
+    // For services, you can implement a similar modal or direct contact system
   }
 
   const handleSearch = (e) => {
@@ -99,45 +279,28 @@ const Home = () => {
     })
   }, [activeTab, sampleProducts, sampleServices, searchQuery, selectedCategory])
 
-  const renderCustomOrdersContent = () => (
-    <div className="py-12">
-      <div className="text-center max-w-3xl mx-auto">
-        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-          <Palette className="text-white" size={32} />
-        </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Need Something Custom?
-        </h2>
-        <p className="text-lg text-gray-600 mb-8">
-          Can't find what you're looking for? Our talented creators can make it just for you! 
-          From personalized artwork to custom services, we've got you covered.
-        </p>
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <Palette className="text-blue-600 mb-4 mx-auto" size={32} />
-            <h3 className="font-semibold text-gray-900 mb-2">Custom Artwork</h3>
-            <p className="text-sm text-gray-600">Personalized paintings, digital art, and illustrations</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <Shirt className="text-green-600 mb-4 mx-auto" size={32} />
-            <h3 className="font-semibold text-gray-900 mb-2">Custom Fashion</h3>
-            <p className="text-sm text-gray-600">Tailored clothing, jewelry, and accessories</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <Code className="text-purple-600 mb-4 mx-auto" size={32} />
-            <h3 className="font-semibold text-gray-900 mb-2">Custom Services</h3>
-            <p className="text-sm text-gray-600">Personalized tutoring, consulting, and more</p>
-          </div>
-        </div>
-        <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:shadow-lg transition-all duration-200">
-          Request Custom Order
-        </button>
-      </div>
-    </div>
-  )
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* New Creator Notification */}
+      {newCreatorNotification && (
+        <div className="fixed top-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-xl shadow-lg max-w-sm animate-slide-in">
+          <div className="flex items-center space-x-3">
+            <Star className="text-yellow-300" size={24} />
+            <div className="flex-1">
+              <p className="font-semibold">{newCreatorNotification.message}</p>
+              <p className="text-sm opacity-90">Check them out in the featured creators section!</p>
+            </div>
+            <button
+              onClick={() => setNewCreatorNotification(null)}
+              className="text-white hover:text-gray-200 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -169,7 +332,7 @@ const Home = () => {
         {/* Navigation Tabs */}
         <div className="sticky top-16 bg-white z-40 py-4 border-b border-gray-200 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg max-w-md mx-auto">
-            {['products', 'services', 'custom'].map((tab) => (
+            {['products', 'services'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -180,7 +343,6 @@ const Home = () => {
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                {tab === 'custom' && ' Orders'}
               </button>
             ))}
           </div>
@@ -212,46 +374,117 @@ const Home = () => {
         <section className="py-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Featured Creators</h2>
-            <button onClick={handleViewAll} className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
-              View All <ChevronRight size={16} className="ml-1" />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={debugFirebaseData} 
+                className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+              >
+                Debug Firebase
+              </button>
+              <button onClick={() => navigate('/featured-creators')} className="flex items-center text-blue-600 hover:text-blue-700 font-medium">
+                View All <ChevronRight size={16} className="ml-1" />
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <div className="flex space-x-4 pb-4">
-              {featuredCreators.map((creator) => (
+              {loadingCreators ? (
+                // Loading skeleton
+                Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="flex-shrink-0 bg-white rounded-lg shadow-md p-4 w-72 animate-pulse">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                      </div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-8 bg-gray-200 rounded"></div>
+                  </div>
+                ))
+              ) : featuredCreators.length === 0 ? (
+                <div className="flex-shrink-0 bg-white rounded-lg shadow-md p-8 w-full text-center">
+                  <Star className="mx-auto text-gray-400 mb-4" size={48} />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Featured Creators Yet</h3>
+                  <p className="text-gray-600 mb-4">Be the first to become a featured creator!</p>
+                  <button
+                    onClick={() => navigate('/sell')}
+                    className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Apply Now
+                  </button>
+                </div>
+              ) : (
+                featuredCreators.map((creator) => (
                 <div
                   key={creator.id}
-                  onClick={() => handleCreatorClick(creator)}
-                  className="flex-shrink-0 bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 w-64"
+                  className="flex-shrink-0 bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200 w-72"
                 >
                   <div className="flex items-center space-x-3 mb-3">
+                    <div className="relative">
                     <img
                       src={creator.avatar}
                       alt={creator.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />
-                    <div>
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                        creator.isAvailable ? 'bg-green-500' : 'bg-gray-400'
+                      }`}></div>
+                    </div>
+                    <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{creator.name}</h3>
                       <p className="text-sm text-gray-600">{creator.specialty}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          creator.isAvailable 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {creator.isAvailable ? 'Available' : 'Busy'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-1">
                       <Star className="text-yellow-400" size={16} fill="currentColor" />
                       <span className="text-sm font-medium text-gray-900">{creator.rating}</span>
                     </div>
                     <span className="text-sm text-gray-500">{creator.orders} orders</span>
                   </div>
+
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleCreatorClick(creator)}
+                      disabled={!creator.isAvailable}
+                      className={`flex-1 flex items-center justify-center py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        creator.isAvailable
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <MessageCircle size={16} className="mr-2" />
+                      {creator.isAvailable ? 'Request Custom Order' : 'Currently Busy'}
+                    </button>
+                    <a
+                      href={creator.portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center py-2 px-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Portfolio
+                    </a>
+                  </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </section>
 
         {/* Main Content Area */}
-        {activeTab === 'custom' ? (
-          renderCustomOrdersContent()
-        ) : (
           <section className="py-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
@@ -309,7 +542,6 @@ const Home = () => {
               </div>
             )}
           </section>
-        )}
 
         {/* Call to Action Section */}
         <section className="py-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl my-12">
@@ -331,6 +563,18 @@ const Home = () => {
           </div>
         </section>
       </div>
+
+      {/* Custom Order Modal */}
+      {selectedCreator && (
+        <CustomOrderModalSimple
+          isOpen={showCustomOrderModal}
+          onClose={() => {
+            setShowCustomOrderModal(false)
+            setSelectedCreator(null)
+          }}
+          creator={selectedCreator}
+        />
+      )}
     </div>
   )
 }
